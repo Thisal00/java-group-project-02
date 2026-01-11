@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EV Master - Manager Dashboard (Updated)</title>
+    <link rel="stylesheet" href="/css/manager-dashboard.css">
+
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <!-- Optional font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+</head>
+<body>
+<script>
+    (function(){
+        const saved = localStorage.getItem('mode');
+        if(saved === 'dark') document.documentElement.classList.add('dark-mode');
+    })();
+</script>
+
+<div class="overlay" id="overlay"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="logo">
+        <div class="badge"><i class="fa-solid fa-bolt"></i></div>
+        <div class="text">
+            EV Master
+            <small>Station Manager</small>
+        </div>
+    </div>
+
+    <nav class="nav" id="nav">
+        <button class="nav-item active" data-view="dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></button>
+        <button class="nav-item" data-view="stations"><i class="fas fa-charging-station"></i> <span>My Stations</span></button>
+        <button class="nav-item" data-view="bookings"><i class="fas fa-calendar-check"></i> <span>Bookings</span></button>
+        <button class="nav-item" data-view="income"><i class="fas fa-money-bill-wave"></i> <span>Income Details</span></button>
+        <button class="nav-item" data-view="reviews"><i class="fas fa-star"></i> <span>Reviews</span></button>
+        <button class="nav-item" data-view="profile"><i class="fas fa-user-circle"></i> <span>Profile Settings</span></button>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a class="nav-item" href="/api/auth/logout"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+        <button class="mode-toggle-button" id="mode-toggle-btn">
+            <i class="fas fa-moon"></i> Night Mode
+        </button>
+    </div>
+</aside>
+
+<main class="main-content">
+    <div class="topbar-mobile">
+        <div class="row">
+            <button class="burger" id="burger" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <strong style="font-weight:900;">EV Master</strong>
+                <span class="pill" id="net-pill"><i class="fa-solid fa-wifi"></i> Online</span>
+            </div>
+            <button class="burger" id="mobile-mode" aria-label="Toggle mode"><i class="fa-solid fa-circle-half-stroke"></i></button>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="title-wrap">
+            <h1 id="view-title">Dashboard</h1>
+            <p id="welcome-text">Welcome, Station Manager!</p>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn btn-ghost" id="refresh-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard-view" class="view-content" style="display:block;">
+        <div class="dashboard-grid">
+            <div class="card stat-card">
+                <div class="value" id="total-stations">0</div>
+                <div class="label">Total Stations</div>
+            </div>
+            <div class="card stat-card">
+                <div class="value" id="total-income">Rs. 0.00</div>
+                <div class="label">Total Income</div>
+            </div>
+            <div class="card stat-card">
+                <div class="value" id="active-bookings-count">0</div>
+                <div class="label">Active Bookings</div>
+            </div>
+            <div class="card stat-card">
+                <div class="value" id="total-reviews-count">0</div>
+                <div class="label">Total Reviews</div>
+            </div>
+        </div>
+
+        <div class="card pad" style="margin-bottom:14px;">
+            <h3 class="section-title">Recent Active Bookings</h3>
+            <div id="recent-bookings-list" class="muted">Loading recent data...</div>
+        </div>
+
+        <div class="card pad">
+            <h3 class="section-title">Recent Reviews</h3>
+            <div id="recent-reviews-list" class="muted">Loading recent data...</div>
+        </div>
+    </section>
+
+    <!-- STATIONS -->
+    <section id="stations-view" class="view-content" style="display:none;">
+        <div id="station-list-view" class="card pad">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                <div>
+                    <h2 class="section-title" style="margin:0;">My Stations</h2>
+                    <p class="muted" style="margin:6px 0 0;">Manage stations and chargers in one place.</p>
+                </div>
+                <button class="btn btn-primary" id="add-station-btn"><i class="fas fa-plus"></i> Add New Station</button>
+            </div>
+
+            <div style="margin-top:14px; overflow:auto;">
+                <table class="data-table">
+                    <thead>
+                    <tr><th>ID</th><th>Name</th><th>Address</th><th>Phone</th><th>Status</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="station-list">
+                    <tr><td colspan="6">Loading stations...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="station-detail-view" style="display:none;">
+            <button class="btn btn-ghost" id="back-to-stations"><i class="fas fa-arrow-left"></i> Back to Stations</button>
+
+            <div class="card pad" style="margin-top:12px;">
+                <h2 class="section-title" id="station-detail-name">Station Details</h2>
+
+                <div class="form-container">
+                    <h3 class="section-title" style="margin-top:0;">Station Information</h3>
+                    <form id="station-form-edit">
+                        <div id="station-form-fields"></div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary" id="save-station-btn"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+                            <button type="button" class="btn btn-danger" id="delete-station-btn"><i class="fa-solid fa-trash"></i> Delete Station</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Station Images -->
+            <div class="card pad" style="margin-top:14px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                    <h3 class="section-title" style="margin:0;">Station Images</h3>
+                    <div class="muted" style="font-weight:700;">Upload photos for your station (helps owners)</div>
+                </div>
+
+                <div style="margin-top:10px;">
+                    <input type="file" id="station-images-input" accept="image/*" multiple style="display:block; margin-top:8px;">
+                    <div style="margin-top:10px;">
+                        <button class="btn btn-primary" id="upload-images-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
+                        <button class="btn btn-ghost" id="clear-images-input" style="margin-left:8px;"><i class="fa-solid fa-eraser"></i> Clear Selection</button>
+                    </div>
+
+                    <div id="upload-preview" style="margin-top:12px;" class="image-gallery"></div>
+
+                    <h4 class="section-title" style="margin-top:14px;">Gallery</h4>
+                    <div id="station-images-gallery" class="image-gallery">
+                        <div class="muted">Loading images...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card pad" style="margin-top:14px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                    <h3 class="section-title" style="margin:0;">Charger Management</h3>
+                    <span class="pill warn" id="charger-delete-hint" style="display:none;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Delete endpoint missing in backend
+          </span>
+                </div>
+
+                <form id="charger-form" class="form-container" style="padding:0; margin-top:10px;">
+                    <input type="hidden" id="charger-id" />
+                    <label for="charger-name">Charger Name</label>
+                    <input type="text" id="charger-name" placeholder="e.g., Bay 1 DC" required>
+
+                    <label for="charger-type">Type</label>
+                    <select id="charger-type" required>
+                        <option value="">Select Type (AC/DC)</option>
+                        <option value="AC">AC</option>
+                        <option value="DC">DC</option>
+                    </select>
+
+                    <label for="charger-connector">Connector Type</label>
+                    <input type="text" id="charger-connector" placeholder="e.g., CCS, Type 2" required>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label for="charger-power">Power Output (kW)</label>
+                            <input type="number" id="charger-power" min="0" step="1" placeholder="e.g., 50" required>
+                        </div>
+                        <div>
+                            <label for="charger-price">Price per Hour (Rs.)</label>
+                            <input type="number" id="charger-price" min="0" step="0.01" placeholder="e.g., 500.00" required>
+                        </div>
+                    </div>
+
+                    <label for="charger-total-slots">Total Slots</label>
+                    <input type="number" id="charger-total-slots" min="1" step="1" placeholder="e.g., 4" required>
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Charger</button>
+                        <button type="button" class="btn btn-ghost" id="clear-charger-btn"><i class="fa-solid fa-eraser"></i> Clear</button>
+                    </div>
+                </form>
+
+                <h4 class="section-title" style="margin-top:14px;">Available Chargers</h4>
+                <div style="overflow:auto;">
+                    <table class="data-table">
+                        <thead>
+                        <tr><th>Name</th><th>Type</th><th>Connector</th><th>Price (Rs./hr)</th><th>Slots (Avail/Total)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="charger-list-body">
+                        <tr><td colspan="6">No chargers added.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="station-add-form-view" class="card pad" style="display:none;">
+            <button class="btn btn-ghost" id="back-to-list"><i class="fas fa-arrow-left"></i> Back to List</button>
+            <h3 class="section-title" style="margin-top:12px;">Add New Station</h3>
+
+            <form id="station-form-add">
+                <input type="hidden" id="station-add-id">
+
+                <label for="station-add-name">Station Name</label>
+                <input type="text" id="station-add-name" placeholder="Station Name" required>
+
+                <label for="station-add-address">Address</label>
+                <input type="text" id="station-add-address" placeholder="Address" required>
+
+                <div class="map-location-container">
+                    <button type="button" class="btn btn-primary" id="map-pick-add"><i class="fas fa-map-marker-alt"></i> Set Location on Map</button>
+                    <p class="muted" style="margin:10px 0 0;">Selected Location:</p>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                        <input type="text" id="station-add-lat" placeholder="Latitude (Lat)" required readonly>
+                        <input type="text" id="station-add-lng" placeholder="Longitude (Lng)" required readonly>
+                    </div>
+                </div>
+
+                <label for="station-add-province">Province</label>
+                <select id="station-add-province" required>
+                    <option value="">Select Province</option>
+                </select>
+
+                <label for="station-add-district">District</label>
+                <select id="station-add-district" required>
+                    <option value="">Select District</option>
+                </select>
+
+                <label for="station-add-phone">Phone Number</label>
+                <input type="tel" id="station-add-phone" placeholder="Phone Number">
+
+                <label for="station-add-description">Description</label>
+                <textarea id="station-add-description" placeholder="Description" rows="3"></textarea>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div>
+                        <label for="station-add-open-time">Open Time</label>
+                        <input type="time" id="station-add-open-time" required>
+                    </div>
+                    <div>
+                        <label for="station-add-close-time">Close Time</label>
+                        <input type="time" id="station-add-close-time" required>
+                    </div>
+                </div>
+
+                <label for="station-add-status">Current Status</label>
+                <select id="station-add-status" required>
+                    <option value="Operational">Operational</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Closed">Closed</option>
+                </select>
+
+                <!-- Add images input on add form so user can upload images at creation time -->
+                <label for="station-add-images">Upload Station Images (optional)</label>
+                <input type="file" id="station-add-images-input" accept="image/*" multiple>
+                <div id="station-add-upload-preview" class="image-gallery" style="margin-top:8px;"></div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Create Station</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- BOOKINGS -->
+    <section id="bookings-view" class="view-content" style="display:none;">
+        <div class="card pad">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                <div>
+                    <h2 class="section-title" style="margin:0;">Bookings Received</h2>
+                    <p class="muted" style="margin:6px 0 0;">View and cancel active bookings.</p>
+                </div>
+                <select id="booking-filter" style="max-width:220px;">
+                    <option value="ALL">All</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="FINISHED">Finished</option>
+                    <option value="CANCELLED">Cancelled</option>
+                    <option value="CASH_PENDING">Cash Pending</option>
+                </select>
+            </div>
+
+            <div id="manager-bookings-content" style="margin-top:14px;"></div>
+        </div>
+    </section>
+
+    <!-- INCOME -->
+    <section id="income-view" class="view-content" style="display:none;">
+        <div class="card pad">
+            <h2 class="section-title" style="margin:0;">Income Details</h2>
+            <p class="muted" style="margin:6px 0 0;">Revenue from finished bookings.</p>
+
+            <div id="manager-income-content" style="margin-top:14px;"></div>
+
+            <div class="card pad" style="margin-top:14px;">
+                <h3 class="section-title" style="margin:0;">Total Revenue Earned</h3>
+                <p style="font-size:1.8rem; color: var(--color-primary); font-weight: 900; margin:10px 0 0;" id="total-revenue">Rs. 0.00</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section id="reviews-view" class="view-content" style="display:none;">
+        <div class="card pad">
+            <h2 class="section-title" style="margin:0;">Reviews Received</h2>
+            <p class="muted" style="margin:6px 0 0;">Ratings grouped by station.</p>
+            <div id="reviews-summary" style="margin-top:14px;"></div>
+        </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profile-view" class="view-content" style="display:none;">
+        <div class="card pad">
+            <h2 class="section-title" style="margin:0;">My Profile Settings</h2>
+            <p class="muted" style="margin:6px 0 0;">Update your details.</p>
+
+            <div class="form-container" style="padding:0; margin-top:12px;">
+                <form id="profile-form">
+                    <label for="profile-email">Email (Read-only)</label>
+                    <input type="email" id="profile-email" disabled value="Loading...">
+
+                    <label for="profile-fullname">Full Name</label>
+                    <input type="text" id="profile-fullname" placeholder="Full Name" required>
+
+                    <label for="profile-nic">National ID (NIC)</label>
+                    <input type="text" id="profile-nic" placeholder="NIC" required>
+
+                    <label for="profile-phone">Phone Number</label>
+                    <input type="tel" id="profile-phone" placeholder="Phone Number" required>
+
+                    <label for="profile-type">User Type (Read-only)</label>
+                    <input type="text" id="profile-type" disabled value="Loading...">
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+                    </div>
+                </form>
+
+                <div style="margin-top:16px;">
+                    <h3 class="section-title">Account Actions</h3>
+                    <button class="btn btn-ghost" style="width:100%;" id="reset-password-btn"><i class="fa-solid fa-key"></i> Reset Password</button>
+                    <button class="btn btn-danger" style="width:100%; margin-top:10px;" id="delete-account-btn"><i class="fa-solid fa-user-xmark"></i> Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- Map picker modal (single-file approach) -->
+<div class="modal" id="map-modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="map-modal-title">
+        <div class="modal-header">
+            <div style="display:flex; gap:8px; align-items:center;">
+                <strong id="map-modal-title">Pick location on map</strong>
+                <span class="map-help" id="map-coords-display"></span>
+            </div>
+            <div>
+                <button class="btn btn-ghost" id="map-center-btn" title="Center on marker"><i class="fa-solid fa-location-crosshairs"></i></button>
+                <button class="btn btn-ghost" id="map-close-btn" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div id="map"></div>
+        <div class="modal-footer">
+            <div style="display:flex; gap:10px; align-items:center;">
+                <div class="muted">Click on map to place marker. Drag marker to adjust.</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="btn btn-ghost" id="map-clear-marker"><i class="fa-solid fa-eraser"></i> Clear</button>
+                <button class="btn btn-primary" id="map-use-btn"><i class="fa-solid fa-check"></i> Use this location</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // -----------------------
+    // Helpers / State
+    // -----------------------
+    const $$ = (sel) => document.querySelector(sel);
+    const $$$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const safe = (v, fallback='') => (v === null || v === undefined ? fallback : v);
+    const num = (v, fallback=0) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : fallback;
+    };
+    const toTimeValue = (t) => {
+        if (!t) return '';
+        const s = String(t);
+        return s.length >= 5 ? s.substring(0,5) : s;
+    };
+    const money = (v) => `Rs. ${num(v,0).toFixed(2)}`;
+
+    const state = {
+        currentView: 'dashboard',
+        currentStationId: null,
+        stationCache: [],
+        chargerCache: new Map(),
+        bookingsCache: [],
+        incomeCache: [],
+        reviewsCache: [],
+        profile: null,
+        stationImages: new Map() // stationId -> [images]
+    };
+
+    function toast(type, title, msg){
+        const wrap = document.getElementById('toast-wrap');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        const icon = type === 'ok' ? 'fa-circle-check'
+            : type === 'warn' ? 'fa-triangle-exclamation'
+                : 'fa-circle-xmark';
+        el.innerHTML = `
+      <i class="fa-solid ${icon}"></i>
+      <div>
+        <p class="t-title">${safe(title,'')}</p>
+        <p class="t-msg">${safe(msg,'')}</p>
+      </div>
+      <button class="x" aria-label="Close">&times;</button>
+    `;
+        el.querySelector('.x').onclick = () => el.remove();
+        wrap.appendChild(el);
+        setTimeout(() => { if (el.isConnected) el.remove(); }, 5200);
+    }
+
+    async function apiFetch(url, opts = {}) {
+        const res = await fetch(url, {
+            credentials: 'include',
+            headers: { 'Accept': 'application/json', ...(opts.headers || {}) },
+            ...opts
+        });
+        if (res.status === 401 || res.status === 403) {
+            toast('warn', 'Session', 'Unauthorized/Forbidden. Please login again if needed.');
+        }
+        return res;
+    }
+
+    async function apiJson(url, opts = {}) {
+        const res = await apiFetch(url, opts);
+        if (!res.ok) {
+            const t = await res.text().catch(()=>'');
+            throw new Error(`${res.status} ${res.statusText}${t ? ' - ' + t : ''}`);
+        }
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('application/json')) return await res.json();
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return text; }
+    }
+
+    function pillForStatus(status){
+        const s = String(status || '').toLowerCase();
+        if (s === 'operational' || s === 'active' || s === 'finished' || s === 'confirmed') return 'pill ok';
+        if (s === 'maintenance' || s === 'pending' || s === 'cash_pending') return 'pill warn';
+        if (s === 'closed' || s === 'cancelled') return 'pill bad';
+        return 'pill';
+    }
+
+    // -----------------------
+    // Sri Lanka Provinces
+    // -----------------------
+    const SRI_LANKA_PROVINCES = [
+        { name: "Central", districts: ["Kandy", "Matale", "Nuwara Eliya"] },
+        { name: "Eastern", districts: ["Ampara", "Batticaloa", "Trincomalee"] },
+        { name: "North Central", districts: ["Anuradhapura", "Polonnaruwa"] },
+        { name: "Northern", districts: ["Jaffna", "Kilinochchi", "Mannar", "Mullaitivu", "Vavuniya"] },
+        { name: "North Western", districts: ["Kurunegala", "Puttalam"] },
+        { name: "Sabaragamuwa", districts: ["Kegalle", "Ratnapura"] },
+        { name: "Southern", districts: ["Galle", "Matara", "Hambantota"] },
+        { name: "Uva", districts: ["Badulla", "Monaragala"] },
+        { name: "Western", districts: ["Colombo", "Gampaha", "Kalutara"] }
+    ];
+
+    function initializeProvinceDropdown(selectId) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        select.innerHTML = '<option value="">Select Province</option>';
+        SRI_LANKA_PROVINCES.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.name;
+            opt.textContent = p.name;
+            select.appendChild(opt);
+        });
+    }
+
+    function updateDistrictDropdown(provinceSelectId, districtSelectId, selectedDistrict = null) {
+        const provinceSelect = document.getElementById(provinceSelectId);
+        const districtSelect = document.getElementById(districtSelectId);
+        if (!provinceSelect || !districtSelect) return;
+
+        const provinceName = provinceSelect.value;
+        districtSelect.innerHTML = '<option value="">Select District</option>';
+        if (!provinceName) return;
+
+        const provinceData = SRI_LANKA_PROVINCES.find(p => p.name === provinceName);
+        if (!provinceData) return;
+
+        provinceData.districts.forEach(d => {
+            const opt = document.createElement('option');
+            opt.value = d;
+            opt.textContent = d;
+            if (d === selectedDistrict) opt.selected = true;
+            districtSelect.appendChild(opt);
+        });
+    }
+
+    // -----------------------
+    // Navigation / Views
+    // -----------------------
+    const viewContents = $$$('.view-content');
+    const navButtons = $$$('.nav-item[data-view]');
+    const viewTitle = $$('#view-title');
+
+    function setActiveNav(viewId) {
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        const activeBtn = navButtons.find(b => b.dataset.view === viewId);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            viewTitle.textContent = activeBtn.textContent.trim();
+        } else {
+            viewTitle.textContent = viewId;
+        }
+    }
+
+    function showView(viewId) {
+        state.currentView = viewId;
+
+        viewContents.forEach(v => v.style.display = 'none');
+        const viewEl = document.getElementById(viewId + '-view');
+        if (viewEl) viewEl.style.display = 'block';
+
+        setActiveNav(viewId);
+        closeMobileMenu();
+
+        if (viewId === 'stations') {
+            showStationsListUI();
+            fetchStations();
+        }
+        if (viewId === 'dashboard') loadManagerDashboardData();
+        if (viewId === 'bookings') fetchManagerBookings();
+        if (viewId === 'income') fetchManagerIncome();
+        if (viewId === 'reviews') fetchManagerReviews();
+        if (viewId === 'profile') loadProfileData();
+    }
+
+    // -----------------------
+    // Night Mode
+    // -----------------------
+    function applyModeUI(){
+        const isDark = document.documentElement.classList.contains('dark-mode');
+        const btn = document.getElementById('mode-toggle-btn');
+        if (btn) btn.innerHTML = isDark ? '<i class="fas fa-sun"></i> Day Mode' : '<i class="fas fa-moon"></i> Night Mode';
+    }
+
+    function toggleMode(){
+        document.documentElement.classList.toggle('dark-mode');
+        const nowDark = document.documentElement.classList.contains('dark-mode');
+        localStorage.setItem('mode', nowDark ? 'dark' : 'light');
+        applyModeUI();
+    }
+
+    // -----------------------
+    // Mobile sidebar
+    // -----------------------
+    function openMobileMenu(){
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('overlay').classList.add('show');
+    }
+    function closeMobileMenu(){
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+    }
+
+    // -----------------------
+    // Map Picker (modal in same file)
+    // -----------------------
+    // NOTE: This is a very small embedded map stub. Replace with real map (Leaflet/Google) as needed.
+    let mapState = { lat: null, lng: null };
+    function openMapModal(initialLat, initialLng){
+        const modal = document.getElementById('map-modal');
+        modal.setAttribute('aria-hidden','false');
+        // populate coords display
+        const display = document.getElementById('map-coords-display');
+        if (initialLat && initialLng) display.textContent = ` ${initialLat.toFixed(5)}, ${initialLng.toFixed(5)}`;
+        else display.textContent = '';
+        // simple instructions only — actual map integration left for backend/dev.
+    }
+    function closeMapModal(){ document.getElementById('map-modal').setAttribute('aria-hidden','true'); }
+
+    document.getElementById('map-close-btn').addEventListener('click', closeMapModal);
+    document.getElementById('map-use-btn').addEventListener('click', () => {
+        // Copy mapState coords into visible add/edit fields depending on which form is open
+        const addVisible = document.getElementById('station-add-form-view').style.display === 'block';
+        const detailVisible = document.getElementById('station-detail-view').style.display === 'block';
+        if (addVisible) {
+            if (mapState.lat && mapState.lng) {
+                document.getElementById('station-add-lat').value = mapState.lat;
+                document.getElementById('station-add-lng').value = mapState.lng;
+            }
+        } else if (detailVisible) {
+            const latEl = document.getElementById('station-edit-lat');
+            const lngEl = document.getElementById('station-edit-lng');
+            if (latEl) latEl.value = mapState.lat || '';
+            if (lngEl) lngEl.value = mapState.lng || '';
+        }
+        closeMapModal();
+    });
+
+    // -----------------------
+    // Dashboard
+    // -----------------------
+    async function loadManagerDashboardData() {
+        document.getElementById('recent-bookings-list').textContent = 'Loading recent data...';
+        document.getElementById('recent-reviews-list').textContent = 'Loading recent data...';
+
+        try {
+            const [stations, bookings, income, reviews] = await Promise.all([
+                apiJson('/api/manager/stations').catch(()=>[]),
+                apiJson('/api/manager/bookings').catch(()=>[]),
+                apiJson('/api/manager/income').catch(()=>[]),
+                apiJson('/api/manager/reviews').catch(()=>[])
+            ]);
+
+            state.stationCache = Array.isArray(stations) ? stations : [];
+            state.bookingsCache = Array.isArray(bookings) ? bookings : [];
+            state.incomeCache = Array.isArray(income) ? income : [];
+            state.reviewsCache = Array.isArray(reviews) ? reviews : [];
+
+            const totalRevenue = state.incomeCache.reduce((sum, b) => sum + num(b?.totalPrice, 0), 0);
+            const activeBookings = state.bookingsCache.filter(b => String(b?.status || '').toUpperCase() === 'ACTIVE');
+
+            document.getElementById('total-stations').textContent = state.stationCache.length;
+            document.getElementById('total-income').textContent = money(totalRevenue);
+            document.getElementById('active-bookings-count').textContent = activeBookings.length;
+            document.getElementById('total-reviews-count').textContent = state.reviewsCache.length;
+
+            renderDashboardRecentBookings(activeBookings.slice(0,5));
+            renderDashboardRecentReviews(state.reviewsCache.slice(0,5));
+        } catch (e) {
+            console.error('Dashboard load error:', e);
+            document.getElementById('recent-bookings-list').innerHTML = `<p class="errline">Failed to load dashboard data. Check backend endpoints.</p>`;
+            document.getElementById('recent-reviews-list').innerHTML = `<p class="errline">Failed to load dashboard data.</p>`;
+            toast('bad', 'Dashboard', 'Failed to load dashboard data.');
+        }
+    }
+
+    function renderDashboardRecentBookings(list) {
+        const c = document.getElementById('recent-bookings-list');
+        c.innerHTML = '';
+        if (!list || list.length === 0) {
+            c.innerHTML = `<p class="muted">No recent active bookings.</p>`;
+            return;
+        }
+        list.forEach(b => {
+            const stationName = safe(b?.charger?.station?.name, 'Station');
+            const hours = num(b?.totalHours, 0);
+            const p = document.createElement('p');
+            p.style.margin = '8px 0';
+            p.innerHTML = `<i class="fas fa-calendar-check"></i> Booking <b>#${safe(b?.id,'')}</b> for <b>${stationName}</b> (${hours} hrs)`;
+            c.appendChild(p);
+        });
+    }
+
+    function renderDashboardRecentReviews(list) {
+        const c = document.getElementById('recent-reviews-list');
+        c.innerHTML = '';
+        if (!list || list.length === 0) {
+            c.innerHTML = `<p class="muted">No recent reviews.</p>`;
+            return;
+        }
+        list.forEach(r => {
+            const stationName = safe(r?.station?.name, 'Station');
+            const rating = num(r?.rating, 0);
+            const p = document.createElement('p');
+            p.style.margin = '8px 0';
+            p.innerHTML = `<i class="fas fa-star"></i> <b>${rating}/5</b> for <b>${stationName}</b>`;
+            c.appendChild(p);
+        });
+    }
+
+    // -----------------------
+    // Stations UI helpers
+    // -----------------------
+    function showStationsListUI(){
+        document.getElementById('station-list-view').style.display = 'block';
+        document.getElementById('station-detail-view').style.display = 'none';
+        document.getElementById('station-add-form-view').style.display = 'none';
+        state.currentStationId = null;
+    }
+
+    function showAddStationForm() {
+        document.getElementById('station-list-view').style.display = 'none';
+        document.getElementById('station-detail-view').style.display = 'none';
+        document.getElementById('station-add-form-view').style.display = 'block';
+
+        document.getElementById('station-form-add').reset();
+        document.getElementById('station-add-id').value = '';
+        document.getElementById('station-add-status').value = 'Operational';
+
+        initializeProvinceDropdown('station-add-province');
+        updateDistrictDropdown('station-add-province', 'station-add-district');
+        document.getElementById('station-add-lat').value = '';
+        document.getElementById('station-add-lng').value = '';
+        document.getElementById('station-add-upload-preview').innerHTML = '';
+    }
+
+    // -----------------------
+    // Stations CRUD
+    // -----------------------
+    async function fetchStations() {
+        const tbody = document.getElementById('station-list');
+        tbody.innerHTML = '<tr><td colspan="6">Loading stations...</td></tr>';
+
+        try {
+            const stations = await apiJson('/api/manager/stations');
+            state.stationCache = Array.isArray(stations) ? stations : [];
+            renderStationList(state.stationCache, tbody);
+        } catch (e) {
+            console.error('fetchStations error:', e);
+            tbody.innerHTML = `<tr><td colspan="6" class="errline">Failed to load stations. ${safe(e.message,'')}</td></tr>`;
+            toast('bad','Stations','Failed to load stations.');
+        }
+    }
+
+    function renderStationList(stations, tbody) {
+        tbody.innerHTML = '';
+        if (!stations || stations.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">You have not added any charging stations yet.</td></tr>';
+            return;
+        }
+
+        stations.forEach(s => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+        <td>${safe(s.id)}</td>
+        <td>${safe(s.name)}</td>
+        <td>${safe(s.address)}</td>
+        <td>${safe(s.phoneNumber,'N/A')}</td>
+        <td><span class="${pillForStatus(s.status)}">${safe(s.status,'N/A')}</span></td>
+        <td><button class="btn btn-primary" data-action="station-details" data-id="${safe(s.id)}"><i class="fa-solid fa-gear"></i> Manage</button></td>
+      `;
+        });
+    }
+
+    async function handleStationSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const isEdit = form.id === 'station-form-edit';
+
+        // helper to read values
+        const getVal = (id) => {
+            const el = document.getElementById((isEdit ? 'station-edit-' : 'station-add-') + id);
+            return el ? el.value : '';
+        };
+
+        const payload = {
+            id: isEdit ? state.currentStationId : (document.getElementById('station-add-id')?.value || null),
+            name: isEdit ? document.getElementById('station-edit-name').value : document.getElementById('station-add-name').value,
+            address: isEdit ? document.getElementById('station-edit-address').value : document.getElementById('station-add-address').value,
+            latitude: parseFloat(isEdit ? document.getElementById('station-edit-lat').value : document.getElementById('station-add-lat').value),
+            longitude: parseFloat(isEdit ? document.getElementById('station-edit-lng').value : document.getElementById('station-add-lng').value),
+            district: isEdit ? document.getElementById('station-edit-district').value : document.getElementById('station-add-district').value,
+            province: isEdit ? document.getElementById('station-edit-province').value : document.getElementById('station-add-province').value,
+            phoneNumber: isEdit ? document.getElementById('station-edit-phone').value : document.getElementById('station-add-phone').value,
+            description: isEdit ? document.getElementById('station-edit-description').value : document.getElementById('station-add-description').value,
+            openTime: isEdit ? document.getElementById('station-edit-open-time').value : document.getElementById('station-add-open-time').value,
+            closeTime: isEdit ? document.getElementById('station-edit-close-time').value : document.getElementById('station-add-close-time').value,
+            status: isEdit ? document.getElementById('station-edit-status').value : document.getElementById('station-add-status').value
+        };
+
+        if (!payload.name || !payload.address) {
+            toast('warn','Station','Please fill station name and address.');
+            return;
+        }
+        if (!Number.isFinite(payload.latitude) || !Number.isFinite(payload.longitude)) {
+            toast('warn','Station','Please set a valid location using the map picker.');
+            return;
+        }
+
+        const btn = document.getElementById(isEdit ? 'save-station-btn' : null);
+        if (btn) btn.disabled = true;
+
+        try {
+            const resBody = await apiJson('/api/manager/stations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            // resBody ideally contains created station with id
+            let createdStationId = resBody && resBody.id ? resBody.id : null;
+
+            // if we don't get id back, fetch stations and try to find the created one by name+address
+            if (!createdStationId) {
+                const all = await apiJson('/api/manager/stations').catch(()=>[]);
+                const found = (all || []).find(s => s.name === payload.name && s.address === payload.address);
+                if (found) createdStationId = found.id;
+            }
+
+            // attempt to upload images from add form if any
+            if (!isEdit) {
+                const addInput = document.getElementById('station-add-images-input');
+                if (addInput && addInput.files && addInput.files.length && createdStationId) {
+                    const fd = new FormData();
+                    Array.from(addInput.files).forEach(f => fd.append('files', f));
+                    const upRes = await fetch(`/api/manager/stations/${createdStationId}/images`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: fd
+                    });
+                    if (!upRes.ok) {
+                        const txt = await upRes.text().catch(()=>'');
+                        console.warn('Image upload returned non-ok:', txt || upRes.status);
+                        toast('warn','Images','Station created but image upload failed. You can upload from station detail view.');
+                    } else {
+                        toast('ok','Images','Images uploaded.');
+                    }
+                }
+            }
+
+            toast('ok','Station', `Station ${isEdit ? 'updated' : 'created'} successfully!`);
+            // refresh list and view
+            await fetchStations();
+            showView('stations');
+        } catch (e) {
+            console.error('save station error:', e);
+            toast('bad','Station', `Failed to save station. ${safe(e.message,'')}`);
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    async function deleteStation() {
+        if (!state.currentStationId) return;
+        if (!confirm('WARNING: Deleting this station will also delete all associated data. Are you sure?')) return;
+
+        try {
+            await apiJson(`/api/manager/stations/${state.currentStationId}`, { method: 'DELETE' });
+            toast('ok','Station','Station deleted successfully!');
+            state.currentStationId = null;
+            showView('stations');
+            fetchStations();
+        } catch (e) {
+            console.error('delete station error:', e);
+            toast('bad','Station', `Failed to delete station. ${safe(e.message,'')}`);
+        }
+    }
+
+    async function showStationDetails(stationId) {
+        state.currentStationId = Number(stationId);
+
+        document.getElementById('station-list-view').style.display = 'none';
+        document.getElementById('station-add-form-view').style.display = 'none';
+        document.getElementById('station-detail-view').style.display = 'block';
+
+        await loadStationData(state.currentStationId);
+        await fetchChargers(state.currentStationId);
+        resetChargerForm();
+        await fetchStationImages(state.currentStationId);
+    }
+
+    async function loadStationData(stationId) {
+        try {
+            if (!state.stationCache.length) {
+                state.stationCache = await apiJson('/api/manager/stations');
+            }
+            const station = (state.stationCache || []).find(s => Number(s.id) === Number(stationId));
+
+            if (!station) {
+                toast('warn','Station','Station details not found.');
+                showView('stations');
+                return;
+            }
+
+            document.getElementById('station-detail-name').textContent =
+                `Station: ${safe(station.name)} (ID: ${safe(station.id)})`;
+
+            const fields = document.getElementById('station-form-fields');
+            fields.innerHTML = `
+        <input type="hidden" id="station-edit-id" value="${safe(station.id)}">
+
+        <label for="station-edit-name">Station Name</label>
+        <input type="text" id="station-edit-name" value="${safe(station.name)}" required>
+
+        <label for="station-edit-address">Address</label>
+        <input type="text" id="station-edit-address" value="${safe(station.address)}" required>
+
+        <div class="map-location-container">
+          <button type="button" class="btn btn-primary" id="map-pick-edit"><i class="fas fa-map-marker-alt"></i> Set Location on Map</button>
+          <p class="muted" style="margin:10px 0 0;">Selected Location:</p>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+            <input type="text" id="station-edit-lat" value="${safe(station.latitude,'')}" required readonly>
+            <input type="text" id="station-edit-lng" value="${safe(station.longitude,'')}" required readonly>
+          </div>
+        </div>
+
+        <label for="station-edit-province">Province</label>
+        <select id="station-edit-province" required></select>
+
+        <label for="station-edit-district">District</label>
+        <select id="station-edit-district" required></select>
+
+        <label for="station-edit-phone">Phone Number</label>
+        <input type="tel" id="station-edit-phone" value="${safe(station.phoneNumber,'')}">
+
+        <label for="station-edit-description">Description</label>
+        <textarea id="station-edit-description" rows="3">${safe(station.description,'')}</textarea>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div>
+            <label for="station-edit-open-time">Open Time</label>
+            <input type="time" id="station-edit-open-time" value="${toTimeValue(station.openTime)}" required>
+          </div>
+          <div>
+            <label for="station-edit-close-time">Close Time</label>
+            <input type="time" id="station-edit-close-time" value="${toTimeValue(station.closeTime)}" required>
+          </div>
+        </div>
+
+        <label for="station-edit-status">Current Status</label>
+        <select id="station-edit-status" required>
+          <option value="Operational" ${station.status === 'Operational' ? 'selected' : ''}>Operational</option>
+          <option value="Maintenance" ${station.status === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
+          <option value="Closed" ${station.status === 'Closed' ? 'selected' : ''}>Closed</option>
+        </select>
+      `;
+
+            initializeProvinceDropdown('station-edit-province');
+            const provEl = document.getElementById('station-edit-province');
+            provEl.value = safe(station.province,'');
+            updateDistrictDropdown('station-edit-province', 'station-edit-district', safe(station.district,''));
+
+            const editMapBtn = document.getElementById('map-pick-edit');
+            if (editMapBtn) editMapBtn.onclick = () => openMapModal(Number(station.latitude), Number(station.longitude));
+
+            provEl.onchange = () => updateDistrictDropdown('station-edit-province', 'station-edit-district');
+
+        } catch (e) {
+            console.error('loadStationData error:', e);
+            toast('bad','Station','Could not load station details for editing.');
+        }
+    }
+
+    // -----------------------
+    // Station Images
+    // -----------------------
+    async function fetchStationImages(stationId) {
+        const gallery = document.getElementById('station-images-gallery');
+        if (!gallery) return;
+        gallery.innerHTML = '<div class="muted">Loading images...</div>';
+        try {
+            const imgs = await apiJson(`/api/manager/stations/${stationId}/images`).catch(()=>[]);
+            state.stationImages.set(Number(stationId), Array.isArray(imgs) ? imgs : []);
+            renderStationImages(stationId);
+        } catch (e) {
+            console.error('fetchStationImages error:', e);
+            gallery.innerHTML = `<div class="errline">Failed to load images.</div>`;
+            toast('warn','Images','Could not load station images.');
+        }
+    }
+
+    function renderStationImages(stationId) {
+        const gallery = document.getElementById('station-images-gallery');
+        if (!gallery) return;
+        const imgs = state.stationImages.get(Number(stationId)) || [];
+        gallery.innerHTML = '';
+        if (!imgs || imgs.length === 0) {
+            gallery.innerHTML = '<div class="muted">No images uploaded.</div>';
+            return;
+        }
+        imgs.forEach(img => {
+            const div = document.createElement('div');
+            div.className = 'image-thumb';
+            const imageUrl = img.url || img.path || img.filename || '';
+            div.innerHTML = `
+              <button class="del" data-imgid="${safe(img.id)}" title="Delete image"><i class="fa-solid fa-trash"></i></button>
+              <a href="${imageUrl}" target="_blank" rel="noopener noreferrer" style="display:block; width:100%; height:100%;">
+                <img src="${imageUrl}" alt="${safe(img.filename,'image')}" />
+              </a>
+            `;
+            const delBtn = div.querySelector('.del');
+            delBtn.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                const id = delBtn.dataset.imgid;
+                deleteStationImage(stationId, id);
+            });
+            gallery.appendChild(div);
+        });
+    }
+
+    async function deleteStationImage(stationId, imageId) {
+        if (!confirm('Delete this image?')) return;
+        const gallery = document.getElementById('station-images-gallery');
+        try {
+            const res = await apiFetch(`/api/manager/stations/${stationId}/images/${imageId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const text = await res.text().catch(()=>'');
+                throw new Error(text || `${res.status}`);
+            }
+            toast('ok','Images','Image deleted.');
+            await fetchStationImages(stationId);
+        } catch (e) {
+            console.error('deleteStationImage error:', e);
+            toast('bad','Images', `Failed to delete image. ${safe(e.message,'')}`);
+        }
+    }
+
+    // upload preview helper
+    function previewSelectedFiles(inputEl, previewContainer) {
+        previewContainer.innerHTML = '';
+        const files = inputEl.files || [];
+        if (!files.length) {
+            previewContainer.innerHTML = '<div class="muted">No files selected.</div>';
+            return;
+        }
+        Array.from(files).forEach((f) => {
+            const url = URL.createObjectURL(f);
+            const div = document.createElement('div');
+            div.className = 'image-thumb';
+            div.innerHTML = `<img src="${url}" alt="${safe(f.name)}"><div class="caption">${safe(f.name)}</div>`;
+            previewContainer.appendChild(div);
+        });
+    }
+
+    async function uploadSelectedImages() {
+        const stationId = state.currentStationId;
+        if (!stationId) {
+            toast('warn','Images','Open a station first.');
+            return;
+        }
+        const input = document.getElementById('station-images-input');
+        if (!input || !input.files || !input.files.length) {
+            toast('warn','Images','Select files to upload.');
+            return;
+        }
+        const files = Array.from(input.files);
+        const btn = document.getElementById('upload-images-btn');
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Uploading`;
+        try {
+            const fd = new FormData();
+            files.forEach(f => fd.append('files', f)); // backend should accept 'files'
+            const res = await fetch(`/api/manager/stations/${stationId}/images`, {
+                method: 'POST',
+                credentials: 'include',
+                body: fd
+            });
+            if (!res.ok) {
+                const txt = await res.text().catch(()=>'');
+                throw new Error(txt || `${res.status}`);
+            }
+            toast('ok','Images','Upload successful.');
+            input.value = '';
+            document.getElementById('upload-preview').innerHTML = '';
+            await fetchStationImages(stationId);
+        } catch (e) {
+            console.error('uploadSelectedImages error:', e);
+            toast('bad','Images', `Upload failed: ${safe(e.message,'')}`);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Upload`;
+        }
+    }
+
+    // -----------------------
+    // Chargers CRUD
+    // -----------------------
+    async function fetchChargers(stationId) {
+        const tbody = document.getElementById('charger-list-body');
+        tbody.innerHTML = '<tr><td colspan="6">Loading chargers...</td></tr>';
+        state.chargerCache.clear();
+
+        try {
+            const chargers = await apiJson(`/api/manager/stations/${stationId}/chargers`);
+            const list = Array.isArray(chargers) ? chargers : [];
+            list.forEach(c => state.chargerCache.set(Number(c?.id), c));
+            renderChargerList(list, tbody);
+        } catch (e) {
+            console.error('fetchChargers error:', e);
+            tbody.innerHTML = `<tr><td colspan="6" class="errline">Failed to load chargers. ${safe(e.message,'')}</td></tr>`;
+        }
+    }
+
+    function renderChargerList(chargers, tbody) {
+        tbody.innerHTML = '';
+        if (!chargers || chargers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No chargers available at this station.</td></tr>';
+            return;
+        }
+
+        chargers.forEach(c => {
+            const price = num(c?.pricePerHour, 0).toFixed(2);
+            const avail = num(c?.availableSlots, 0);
+            const total = num(c?.totalSlots, 0);
+
+            const row = tbody.insertRow();
+            row.innerHTML = `
+        <td>${safe(c?.name)}</td>
+        <td>${safe(c?.type)}</td>
+        <td>${safe(c?.connectorType)}</td>
+        <td>${price}</td>
+        <td>${avail}/${total}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-primary" data-action="charger-edit" data-id="${safe(c?.id)}"><i class="fa-solid fa-pen"></i> Edit</button>
+          <button class="btn btn-danger" data-action="charger-delete" data-id="${safe(c?.id)}"><i class="fa-solid fa-trash"></i> Delete</button>
+        </td>
+      `;
+        });
+    }
+
+    function editChargerById(chargerId) {
+        const charger = state.chargerCache.get(Number(chargerId));
+        if (!charger) return;
+
+        document.getElementById('charger-id').value = safe(charger?.id,'');
+        document.getElementById('charger-name').value = safe(charger?.name,'');
+        document.getElementById('charger-type').value = safe(charger?.type,'');
+        document.getElementById('charger-connector').value = safe(charger?.connectorType,'');
+        document.getElementById('charger-power').value = num(charger?.powerOutputKw, 0);
+        document.getElementById('charger-price').value = num(charger?.pricePerHour, 0);
+        document.getElementById('charger-total-slots').value = num(charger?.totalSlots, 0);
+    }
+
+    function resetChargerForm() {
+        document.getElementById('charger-form').reset();
+        document.getElementById('charger-id').value = '';
+    }
+
+    async function handleChargerSubmit(e) {
+        e.preventDefault();
+        if (!state.currentStationId) return;
+
+        const payload = {
+            id: document.getElementById('charger-id').value || null,
+            name: document.getElementById('charger-name').value,
+            type: document.getElementById('charger-type').value,
+            connectorType: document.getElementById('charger-connector').value,
+            powerOutputKw: num(document.getElementById('charger-power').value, 0),
+            pricePerHour: num(document.getElementById('charger-price').value, 0),
+            totalSlots: num(document.getElementById('charger-total-slots').value, 0)
+        };
+
+        try {
+            await apiJson(`/api/manager/stations/${state.currentStationId}/chargers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            toast('ok','Charger','Charger saved successfully!');
+            resetChargerForm();
+            fetchChargers(state.currentStationId);
+        } catch (e) {
+            console.error('save charger error:', e);
+            toast('bad','Charger', `Failed to save charger. ${safe(e.message,'')}`);
+        }
+    }
+
+    async function deleteCharger(chargerId) {
+        if (!chargerId) return;
+        if (!confirm('Are you sure you want to delete this charger?')) return;
+
+        const hint = document.getElementById('charger-delete-hint');
+        hint.style.display = 'none';
+
+        try {
+            const res = await apiFetch(`/api/manager/stations/${state.currentStationId}/chargers/${chargerId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                // show hint so developer knows endpoint may be missing
+                hint.style.display = 'inline-flex';
+                const txt = await res.text().catch(()=>'');
+                throw new Error(txt || `${res.status}`);
+            }
+            toast('ok','Charger','Charger deleted!');
+            fetchChargers(state.currentStationId);
+        } catch (e) {
+            console.warn('delete charger failed:', e);
+            hint.style.display = 'inline-flex';
+            toast('warn','Charger','Delete failed. Add DELETE mapping in backend (see note at bottom).');
+        }
+    }
+
+    // -----------------------
+    // Bookings / Income / Reviews (BOOKINGS UPDATED to include Finish button)
+    // -----------------------
+    async function fetchManagerBookings() {
+        const c = document.getElementById('manager-bookings-content');
+        c.innerHTML = '<p class="muted">Loading bookings...</p>';
+
+        try {
+            const bookings = await apiJson('/api/manager/bookings').catch(()=>[]);
+            state.bookingsCache = Array.isArray(bookings) ? bookings : [];
+
+            const filter = document.getElementById('booking-filter').value;
+            const list = filter === 'ALL'
+                ? state.bookingsCache
+                : state.bookingsCache.filter(b => String(b?.status || '').toUpperCase() === filter);
+
+            if (!list || list.length === 0) {
+                c.innerHTML = '<p class="muted">No bookings found for your stations.</p>';
+                return;
+            }
+
+            let html = `<div style="overflow:auto;"><table class="data-table">
+        <thead><tr>
+          <th>ID</th><th>EV Owner</th><th>Station/Charger</th><th>Start Time</th><th>Price (Rs.)</th><th>Booking Status</th><th>Payment</th><th>Action</th>
+        </tr></thead><tbody>`;
+
+            list.forEach(b => {
+                const status = String(b?.status || '').toUpperCase();
+                const owner = safe(b?.evOwner?.fullName, 'N/A');
+                const station = safe(b?.charger?.station?.name, 'N/A');
+                const charger = safe(b?.charger?.name, 'N/A');
+                const startTime = b?.startTime ? new Date(b.startTime).toLocaleString() : 'N/A';
+                const price = num(b?.totalPrice, 0).toFixed(2);
+
+                // Payment display
+                let paymentCell = '';
+                const paid = !!b?.paid || String(b?.paymentStatus || '').toUpperCase() === 'PAID' || status === 'CONFIRMED';
+                const st = String(b?.status || '').toUpperCase();
+                if (paid) {
+                    paymentCell = `<span class="pill ok">PAID</span>`;
+                } else if (st === 'CASH_PENDING') {
+                    paymentCell = `<span class="pill warn">CASH_PENDING</span>`;
+                } else {
+                    paymentCell = `<span class="pill">UNPAID</span>`;
+                }
+
+                // Action column
+                let actionButton = `<span class="muted">—</span>`;
+                if (st === 'ACTIVE' || st === 'PENDING') {
+                    actionButton = `<button class="btn btn-danger" data-action="booking-cancel" data-id="${safe(b?.id)}"><i class="fa-solid fa-ban"></i> Cancel</button>
+                                      <button class="btn btn-primary" data-action="booking-finish" data-id="${safe(b?.id)}"><i class="fa-solid fa-check-double"></i> Finish</button>`;
+                }
+                if (st === 'CASH_PENDING') {
+                    actionButton = `
+            <button class="btn btn-primary" data-action="approve-payment" data-id="${safe(b?.id)}"><i class="fa-solid fa-wallet"></i> Approve Payment</button>
+            <button class="btn btn-danger" data-action="booking-cancel" data-id="${safe(b?.id)}"><i class="fa-solid fa-ban"></i> Cancel</button>
+          `;
+                }
+                if (st === 'FINISHED') {
+                    actionButton = `<span class="muted"><i class="fa-solid fa-flag-checkered"></i> Finished</span>`;
+                }
+
+                html += `<tr>
+          <td>${safe(b?.id)}</td>
+          <td>${owner}</td>
+          <td>${station} / ${charger}</td>
+          <td>${startTime}</td>
+          <td>${price}</td>
+          <td><span class="${pillForStatus(b?.status)}">${safe(b?.status,'N/A')}</span></td>
+          <td>${paymentCell}</td>
+          <td>${actionButton}</td>
+        </tr>`;
+            });
+
+            html += `</tbody></table></div>`;
+            c.innerHTML = html;
+        } catch (e) {
+            console.error('bookings error:', e);
+            c.innerHTML = `<p class="errline">Failed to load booking data. ${safe(e.message,'')}</p>`;
+        }
+    }
+
+    async function cancelBookingManager(bookingId) {
+        if (!confirm(`Cancel booking ${bookingId}?`)) return;
+        try {
+            await apiJson(`/api/manager/bookings/${bookingId}`, { method: 'DELETE' });
+            toast('ok','Bookings','Booking cancelled successfully.');
+            fetchManagerBookings();
+            loadManagerDashboardData();
+        } catch (e) {
+            toast('bad','Bookings', `Failed to cancel booking. ${safe(e.message,'')}`);
+        }
+    }
+
+    // Manager approves cash payment (calls backend approve endpoint)
+    async function approveCashPayment(bookingId) {
+        if (!confirm(`Approve cash payment for booking ${bookingId}?`)) return;
+        try {
+            const res = await apiFetch(`/api/payment/approve/${bookingId}`, { method: 'POST' });
+            const txt = await res.text().catch(()=>'');
+            if (!res.ok) {
+                toast('bad','Approve','Failed to approve payment: ' + (txt || res.status));
+                return;
+            }
+            toast('ok','Approve','Payment approved and booking marked as PAID.');
+            // reload lists
+            fetchManagerBookings();
+            loadManagerDashboardData();
+        } catch (e) {
+            console.error('approve error:', e);
+            toast('bad','Approve','Network error while approving payment.');
+        }
+    }
+
+    // New: Finish booking (manager marks booking FINISHED -> backend should update booking and income)
+    async function finishBooking(bookingId) {
+        if (!confirm(`Mark booking ${bookingId} as FINISHED?`)) return;
+        try {
+            // Preferred backend endpoint (implement server-side): POST /api/manager/bookings/{id}/finish
+            const res = await apiFetch(`/api/manager/bookings/${bookingId}/finish`, { method: 'POST' });
+            if (!res.ok) {
+                // try alternate PUT to change status
+                const alt = await apiFetch(`/api/manager/bookings/${bookingId}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: 'FINISHED' }) });
+                if (!alt.ok) {
+                    const txt = await res.text().catch(()=>'');
+                    throw new Error(txt || res.status);
+                }
+            }
+            toast('ok','Bookings','Booking marked FINISHED. Income updated.');
+            // refresh booking/income/dashboard
+            fetchManagerBookings();
+            fetchManagerIncome();
+            loadManagerDashboardData();
+        } catch (e) {
+            console.error('finishBooking error:', e);
+            toast('bad','Bookings', `Failed to mark booking finished. ${safe(e.message,'')}`);
+        }
+    }
+
+    // -----------------------
+    // Income & Reviews
+    // -----------------------
+    async function fetchManagerIncome() {
+        const c = document.getElementById('manager-income-content');
+        c.innerHTML = '<p class="muted">Loading income details...</p>';
+
+        try {
+            const incomeBookings = await apiJson('/api/manager/income').catch(()=>[]);
+            state.incomeCache = Array.isArray(incomeBookings) ? incomeBookings : [];
+
+            const totalRevenue = state.incomeCache.reduce((sum, b) => sum + num(b?.totalPrice, 0), 0);
+            document.getElementById('total-revenue').textContent = money(totalRevenue);
+
+            if (!state.incomeCache.length) {
+                c.innerHTML = '<p class="muted">No finished bookings to report income.</p>';
+                return;
+            }
+
+            let html = `<div style="overflow:auto;"><table class="data-table">
+        <thead><tr>
+          <th>Booking ID</th><th>EV Owner</th><th>Charger</th><th>Hours</th><th>Price/hr</th><th>Total Income (Rs.)</th>
+        </tr></thead><tbody>`;
+
+            state.incomeCache.forEach(b => {
+                const owner = safe(b?.evOwner?.fullName,'N/A');
+                const chargerName = safe(b?.charger?.name,'N/A');
+                const hours = num(b?.totalHours, 0);
+                const total = num(b?.totalPrice, 0);
+                const pph = hours > 0 ? (total / hours).toFixed(2) : 'N/A';
+
+                html += `<tr>
+          <td>${safe(b?.id)}</td>
+          <td>${owner}</td>
+          <td>${chargerName}</td>
+          <td>${hours}</td>
+          <td>${pph}</td>
+          <td>${total.toFixed(2)}</td>
+        </tr>`;
+            });
+
+            html += `</tbody></table></div>`;
+            c.innerHTML = html;
+        } catch (e) {
+            console.error('income error:', e);
+            c.innerHTML = `<p class="errline">Failed to load income data. ${safe(e.message,'')}</p>`;
+        }
+    }
+
+    async function fetchManagerReviews() {
+        const c = document.getElementById('reviews-summary');
+        c.innerHTML = '<p class="muted">Loading reviews...</p>';
+
+        try {
+            const reviews = await apiJson('/api/manager/reviews').catch(()=>[]);
+            state.reviewsCache = Array.isArray(reviews) ? reviews : [];
+
+            if (!state.reviewsCache.length) {
+                c.innerHTML = '<p class="muted">No reviews received for your stations.</p>';
+                return;
+            }
+
+            const stationsMap = state.reviewsCache.reduce((acc, r) => {
+                const sid = r?.station?.id;
+                if (!sid) return acc;
+                if (!acc[sid]) acc[sid] = { name: safe(r?.station?.name,'Station'), totalRating: 0, count: 0, reviews: [] };
+                acc[sid].totalRating += num(r?.rating, 0);
+                acc[sid].count += 1;
+                acc[sid].reviews.push(r);
+                return acc;
+            }, {});
+
+            let html = '';
+            Object.keys(stationsMap).forEach(id => {
+                const s = stationsMap[id];
+                const avg = s.count > 0 ? (s.totalRating / s.count).toFixed(1) : '0.0';
+
+                html += `<div class="card pad" style="margin-bottom: 14px;">
+          <h3 class="section-title" style="margin:0;">${s.name} <span class="pill ok" style="margin-left:8px;"><i class="fa-solid fa-star"></i> ${avg} / 5</span></h3>
+          <div style="overflow:auto; margin-top:12px;">
+            <table class="data-table" style="font-size: 0.92rem;">
+              <thead><tr><th>User</th><th>Rating</th><th>Comment</th><th>Charger</th><th>Date</th></tr></thead>
+              <tbody>`;
+
+                s.reviews.forEach(r => {
+                    const user = safe(r?.evOwner?.fullName, 'N/A');
+                    const rating = num(r?.rating, 0);
+                    const comment = safe(r?.comments, '');
+                    const short = comment.length > 80 ? comment.substring(0,80) + '...' : comment;
+                    const charger = safe(r?.booking?.charger?.name, 'N/A');
+                    const dt = r?.reviewDate ? new Date(r.reviewDate).toLocaleDateString() : 'N/A';
+
+                    html += `<tr>
+            <td>${user}</td>
+            <td style="color: var(--color-accent); font-weight: 900;">${rating} ★</td>
+            <td>${short || '<span class="muted">—</span>'}</td>
+            <td>${charger}</td>
+            <td>${dt}</td>
+          </tr>`;
+                });
+
+                html += `</tbody></table></div></div>`;
+            });
+
+            c.innerHTML = html;
+        } catch (e) {
+            console.error('reviews error:', e);
+            c.innerHTML = `<p class="errline">Failed to load review data. ${safe(e.message,'')}</p>`;
+        }
+    }
+
+    // -----------------------
+    // Profile
+    // -----------------------
+    async function loadProfileData() {
+        try {
+            const user = await apiJson('/api/owner/profile'); // adjust to /api/manager/profile if needed
+            state.profile = user;
+
+            document.getElementById('profile-email').value = safe(user?.email,'');
+            document.getElementById('profile-fullname').value = safe(user?.fullName,'');
+            document.getElementById('profile-nic').value = safe(user?.nic,'');
+            document.getElementById('profile-phone').value = safe(user?.phoneNumber,'');
+            document.getElementById('profile-type').value = safe(user?.userType,'STATION_MANAGER');
+
+            document.getElementById('welcome-text').textContent = `Welcome, ${safe(user?.fullName,'Station Manager')}!`;
+        } catch (e) {
+            console.warn('profile load error:', e);
+            document.getElementById('profile-email').value = 'Profile endpoint not available';
+        }
+    }
+
+    async function handleProfileSubmit(e) {
+        e.preventDefault();
+        const payload = {
+            fullName: document.getElementById('profile-fullname').value,
+            nic: document.getElementById('profile-nic').value,
+            phoneNumber: document.getElementById('profile-phone').value
+        };
+
+        try {
+            await apiJson('/api/owner/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            toast('ok','Profile','Profile updated successfully!');
+            loadProfileData();
+        } catch (e) {
+            console.error('profile save error:', e);
+            toast('bad','Profile', `Failed to update profile. ${safe(e.message,'')}`);
+        }
+    }
+
+    // -----------------------
+    // Event bindings (ONE time)
+    // -----------------------
+    function bindUIOnce(){
+        // Sidebar nav
+        navButtons.forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
+
+        // Mode toggle
+        document.getElementById('mode-toggle-btn').addEventListener('click', toggleMode);
+        document.getElementById('mobile-mode').addEventListener('click', toggleMode);
+        applyModeUI();
+
+        // Mobile menu
+        document.getElementById('burger').addEventListener('click', openMobileMenu);
+        document.getElementById('overlay').addEventListener('click', closeMobileMenu);
+
+        // Refresh
+        document.getElementById('refresh-btn').addEventListener('click', () => showView(state.currentView));
+
+        // Stations buttons
+        document.getElementById('add-station-btn').addEventListener('click', showAddStationForm);
+        document.getElementById('back-to-stations').addEventListener('click', () => showView('stations'));
+        document.getElementById('back-to-list').addEventListener('click', () => showView('stations'));
+        document.getElementById('delete-station-btn').addEventListener('click', deleteStation);
+
+        // Map buttons
+        document.getElementById('map-pick-add').addEventListener('click', () => openMapModal());
+
+        // Province add onchange
+        document.getElementById('station-add-province').addEventListener('change', () => {
+            updateDistrictDropdown('station-add-province','station-add-district');
+        });
+
+        // Station forms
+        document.getElementById('station-form-add').addEventListener('submit', handleStationSubmit);
+        // station-form-edit created dynamically — delegate its submit via event listener on document
+        document.body.addEventListener('submit', (ev) => {
+            if (ev.target && ev.target.id === 'station-form-edit') {
+                handleStationSubmit(ev);
+            }
+        });
+
+        // Charger forms
+        document.getElementById('charger-form').addEventListener('submit', handleChargerSubmit);
+        document.getElementById('clear-charger-btn').addEventListener('click', resetChargerForm);
+
+        // Profile
+        document.getElementById('profile-form').addEventListener('submit', handleProfileSubmit);
+        document.getElementById('reset-password-btn').addEventListener('click', () => alert('Use Forgot Password on login screen to reset your password.'));
+        document.getElementById('delete-account-btn').addEventListener('click', () => alert('Account deletion must be implemented in backend.'));
+
+        // Booking filter
+        document.getElementById('booking-filter').addEventListener('change', fetchManagerBookings);
+
+        // Image upload handlers
+        const imagesInput = document.getElementById('station-images-input');
+        const uploadPreview = document.getElementById('upload-preview');
+        if (imagesInput && uploadPreview) {
+            imagesInput.addEventListener('change', () => previewSelectedFiles(imagesInput, uploadPreview));
+        }
+        const uploadBtn = document.getElementById('upload-images-btn');
+        if (uploadBtn) uploadBtn.addEventListener('click', uploadSelectedImages);
+        const clearImgBtn = document.getElementById('clear-images-input');
+        if (clearImgBtn) clearImgBtn.addEventListener('click', () => {
+            if (imagesInput) imagesInput.value = '';
+            if (uploadPreview) uploadPreview.innerHTML = '';
+        });
+
+        // Add-form image preview
+        const addImgsInput = document.getElementById('station-add-images-input');
+        const addPreview = document.getElementById('station-add-upload-preview');
+        if (addImgsInput && addPreview) addImgsInput.addEventListener('change', () => previewSelectedFiles(addImgsInput, addPreview));
+
+        // Delegated clicks (station list / charger list / bookings cancel / approve / finish)
+        document.body.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+
+            if (action === 'station-details') showStationDetails(id);
+            if (action === 'charger-edit') editChargerById(id);
+            if (action === 'charger-delete') deleteCharger(id);
+            if (action === 'booking-cancel') cancelBookingManager(id);
+            if (action === 'approve-payment') approveCashPayment(id);
+            if (action === 'booking-finish') finishBooking(id);
+        });
+
+        // Network pill
+        function updateNet(){
+            const pill = document.getElementById('net-pill');
+            const online = navigator.onLine;
+            pill.className = online ? 'pill ok' : 'pill bad';
+            pill.innerHTML = online ? '<i class="fa-solid fa-wifi"></i> Online' : '<i class="fa-solid fa-wifi-slash"></i> Offline';
+        }
+        window.addEventListener('online', updateNet);
+        window.addEventListener('offline', updateNet);
+        updateNet();
+    }
+
+    // -----------------------
+    // Init
+    // -----------------------
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeProvinceDropdown('station-add-province');
+        updateDistrictDropdown('station-add-province','station-add-district');
+
+        bindUIOnce();
+
+        loadProfileData();
+        showView('dashboard');
+    });
+
+    /* ===========================
+       BACKEND NOTE (IMPORTANT)
+       - The new 'Finish' action calls POST /api/manager/bookings/{id}/finish. If your backend uses a different route, please map it.
+       - Image upload endpoints expected:
+         GET /api/manager/stations/{stationId}/images -> [{ id, url, filename, uploadedAt }, ...]
+         POST /api/manager/stations/{stationId}/images (multipart, field name 'files')
+         DELETE /api/manager/stations/{stationId}/images/{imageId}
+
+       If you want, I can also produce a small server-side stub for these endpoints.
+    =========================== */
+</script>
+</body>
+</html>
