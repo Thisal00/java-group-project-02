@@ -16,43 +16,37 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // =========================
-    // 🧱 PARENT POST
-    // =========================
+    
+    //  PARENT POST
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     @JsonIgnore   // 🔥 PREVENT INFINITE LOOP
     private Post post;
 
-    // =========================
-    // 👤 COMMENT OWNER
-    // =========================
+    
+    //  COMMENT OWNER
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore   // 🔥 PREVENT INFINITE LOOP
     private User user;
 
-    // =========================
-    // 📝 TEXT
-    // =========================
+   
+    //  TEXT
     @Column(length = 1000, nullable = false)
     private String text;
 
-    // =========================
-    // 🙈 HIDDEN BY ADMIN
-    // =========================
+   
+    // HIDDEN BY ADMIN
     @Column(nullable = false)
     private boolean hidden = false;
 
-    // =========================
-    // ⏰ CREATED TIME
-    // =========================
+    
+    //CREATED TIME
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // =========================
+
     // GETTERS & SETTERS
-    // =========================
 
     public Long getId() {
         return id;
@@ -102,3 +96,4 @@ public class Comment {
         this.createdAt = createdAt;
     }
 }
+
