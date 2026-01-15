@@ -128,23 +128,24 @@ public class CommunityController {
         return commentService.addComment(comment);
     }
 
-    // ===================== GET COMMENTS =====================
+    //  GET COMMENTS 
     @GetMapping("/post/{postId}/comments")
     public List<Comment> getComments(@PathVariable Long postId) {
         return commentService.getCommentsByPost(postId);
     }
 
-    // ===================== DELETE COMMENT =====================
+    //  DELETE COMMENT 
     @DeleteMapping("/comment/{id}")
     public void deleteComment(@PathVariable Long id, Authentication auth) {
         User user = getLoggedUser(auth);
         commentService.deleteCommentSecure(id, user);
     }
 
-    // ===================== HIDE COMMENT (ADMIN) =====================
+    //  HIDE COMMENT (ADMIN) 
     @PostMapping("/comment/{id}/hide")
     public void hideComment(@PathVariable Long id, Authentication auth) {
         User user = getLoggedUser(auth);
         commentService.hideCommentSecure(id, user);
     }
 }
+
