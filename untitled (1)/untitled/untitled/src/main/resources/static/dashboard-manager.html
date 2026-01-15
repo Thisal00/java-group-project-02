@@ -1177,6 +1177,91 @@
             });
         }
     }
+    
+    // PDF Export
+    async function downloadIncomePDF() {
+        toast('warn', 'PDF Export', 'Generating PDF report...');
+
+        try {
+            const income = await apiJson('/api/manager/income');
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // HEADER
+            doc.setFontSize(20);
+            doc.text('EV Master - Income Report', 20, 20);
+
+            doc.setFontSize(11);
+            doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 20, 30);
+
+            // SUMMARY
+            doc.setFontSize(16);
+            doc.text('Income Summary', 20, 45);
+
+            doc.setFontSize(12);
+            doc.text(`Today's Income: Rs. ${Number(income.todayIncome || 0).toFixed(2)}`, 20, 55);
+            doc.text(`Weekly Income: Rs. ${Number(income.weeklyIncome || 0).toFixed(2)}`, 20, 65);
+            doc.text(`Monthly Income: Rs. ${Number(income.monthlyIncome || 0).toFixed(2)}`, 20, 75);
+            doc.text(`Total Revenue: Rs. ${Number(income.totalRevenue || 0).toFixed(2)}`, 20, 85);
+
+            // TABLE HEADER
+            doc.setFontSize(14);
+            doc.text('Detailed Income Report', 20, 105);
+
+            let y = 115;
+            doc.setFontSize(10);
+
+            doc.text('Booking ID', 20, y);
+            doc.text('Total Price', 45, y);
+            doc.text('Hours', 80, y);
+            doc.text('Station', 100, y);
+            doc.text('Date', 155, y);
+
+            y += 8;
+
+            // TABLE DATA
+            const tbody = document.getElementById('incomeTableBody');
+
+            if (!tbody) {
+                doc.text('No income records available.', 20, y);
+            } else {
+                const rows = tbody.querySelectorAll('tr');
+
+                if (rows.length === 0) {
+                    doc.text('No income records available.', 20, y);
+                } else {
+                    rows.forEach((row, index) => {
+                        if (y > 280) {
+                            doc.addPage();
+                            y = 20;
+                        }
+
+                        const cells = row.querySelectorAll('td');
+                        if (cells.length >= 5) {
+                            doc.text(String(cells[0].textContent || '').substring(0, 10), 20, y);
+                            doc.text(String(cells[1].textContent || '').substring(0, 10), 45, y);
+                            doc.text(String(cells[2].textContent || '').substring(0, 10), 80, y);
+                            doc.text(String(cells[3].textContent || '').substring(0, 20), 100, y);
+                            doc.text(String(cells[4].textContent || '').substring(0, 15), 155, y);
+
+                            y += 7;
+                        }
+                    });
+                }
+            }
+
+            // SAVE FILE
+            const fileName = `EV-Master-Income-Report-${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+
+            toast('ok', 'PDF Export', 'Income report downloaded successfully!');
+
+        } catch (e) {
+            console.error('PDF generation error:', e);
+            toast('bad', 'PDF Export', 'Failed to generate PDF report.');
+        }
+    }
     // Helpers
     const $$ = (sel) => document.querySelector(sel);
     const $$$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -1673,5 +1758,6 @@
 </script>
 </body>
 </html>
+
 
 
