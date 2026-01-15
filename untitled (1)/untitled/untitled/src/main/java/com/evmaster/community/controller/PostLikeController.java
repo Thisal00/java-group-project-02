@@ -24,9 +24,8 @@ public class PostLikeController {
         this.userRepository = userRepository;
     }
 
-    // =====================
-    // ❤️ TOGGLE LIKE
-    // =====================
+    
+    //TOGGLE LIKE
     @PostMapping("/post/{postId}/like")
     public int toggleLike(@PathVariable Long postId, Authentication auth) {
 
@@ -38,12 +37,12 @@ public class PostLikeController {
         return postLikeService.toggleLike(post, user);
     }
 
-    // =====================
-    // ❤️ GET LIKE COUNT
-    // =====================
+   
+    //  GET LIKE COUNT
     @GetMapping("/post/{postId}/likes")
     public int getLikeCount(@PathVariable Long postId) {
         Post post = postService.getPostById(postId);
         return postLikeService.getLikeCount(post);
     }
 }
+
