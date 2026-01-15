@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EV Master - Owner Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+    <style>
+
+    <!-- Dashboard -->
+    <div id="dashboard-view" class="view-content" style="display:block;">
+        <div class="dashboard-grid">
+            <div class="stat-card"><div class="value" id="total-bookings">0</div><div class="label">Total Bookings</div></div>
+            <div class="stat-card"><div class="value" id="total-reviews">0</div><div class="label">Total Reviews</div></div>
+            <div class="stat-card"><div class="value" id="total-expenses">Rs. 0.00</div><div class="label">Total Expenses</div></div>
+            <div class="stat-card"><div class="value" id="total-cars">0</div><div class="label">Total Cars Added</div></div>
+        </div>
+
+        <div class="stat-card" style="margin-top:12px;">
+            <h3>Upcoming & Active Bookings</h3>
+            <div id="active-bookings-list">Loading...</div>
+        </div>
+
+        <div class="stat-card" style="margin-top:12px;">
+            <h3>Finished Bookings to Review</h3>
+            <div id="pending-reviews-list">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div id="map-view" class="view-content" style="display:none;">
+        <h2>Map & Stations</h2>
+
+        <div class="filter-bar">
+            <button class="btn-primary" style="width:100%;" onclick="openMapViewer()">
+                <i class="fas fa-map-marker-alt"></i> Click to Open Station Map
+            </button>
+        </div>
+
+        <div class="map-wrapper">
+            <p id="map-help-text" style="text-align:center; padding:10px; margin:0;">
+                Click <b>Open Station Map</b> → select station → it will show here.
+            </p>
+
+            <div id="station-details-view" style="display:none;">
+                <h3 id="selected-station-name"></h3>
+                <p id="selected-station-address" style="opacity:.8;"></p>
+
+                <div id="station-charger-list" class="charger-card-list"></div>
+
+                <h4 class="section-header">Book Charger</h4>
+                <div id="booking-controls-area"></div>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    // Navigation
+
+    const viewContents = document.querySelectorAll('.view-content');
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewTitle = document.getElementById('view-title');
+
+    function showView(viewId){
+        viewContents.forEach(v => v.style.display = 'none');
+        navItems.forEach(n => n.classList.remove('active'));
+
+        const view = document.getElementById(viewId + '-view');
+        if(view) view.style.display = 'block';
+
+        const nav = document.querySelector(`[onclick="showView('${viewId}')"]`);
+        if(nav){
+            nav.classList.add('active');
+            const txt = nav.querySelector('.nav-text');
+            viewTitle.textContent = txt ? txt.textContent : viewId.toUpperCase();
+        }else{
+            viewTitle.textContent = viewId.toUpperCase();
+        }
+
+        if(viewId === 'map'){
+            document.getElementById('station-details-view').style.display = 'none';
+            document.getElementById('map-help-text').style.display = 'block';
+            fetchVehicles(true);
+        }
+        if(viewId === 'vehicles') fetchVehicles(false);
+        if(viewId === 'dashboard' || viewId === 'bookings' || viewId === 'reviews') loadBookingAndReviewData();
+        if(viewId === 'profile') loadProfileData();
+    }
+
+    // Startup
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        showView('dashboard');
+        try{
+            await loadProfileData();
+            await loadBookingAndReviewData();
+            await fetchVehicles(true);
+        }catch(e){
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+            }
+        }
+    });
+
+    ;
+
+  
+</script>
+</body>
+</html>
