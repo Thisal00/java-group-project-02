@@ -988,6 +988,195 @@
             toast('bad','Profile', Failed to update profile.);
         }
     }
+    
+    
+    async function loadIncomeData() {
+        try {
+            const res = await apiFetch("/api/manager/income");
+            if (!res.ok) {
+                toast('warn', 'Income', 'Cannot load income data');
+                return { finishedBookings: [], totalRevenue: 0 };
+            }
+            const data = await res.json();
+            state.incomeCache = data;
+            return data;
+        } catch (e) {
+            console.error('Income load error:', e);
+            toast('bad', 'Income', 'Error loading income data');
+            return { finishedBookings: [], totalRevenue: 0 };
+        }
+    }
+
+    async function loadIncome() {
+        const tbody = document.getElementById("incomeTableBody");
+        const totalEl = document.getElementById("totalIncome");
+
+        if (!tbody || !totalEl) {
+            console.error("Income table elements not found!");
+            return;
+        }
+
+        tbody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+
+        try {
+            const data = await loadIncomeData();
+            const list = data.finishedBookings || [];
+            const total = data.totalRevenue || 0;
+
+            // Update total income display
+            totalEl.innerText = "Rs. " + Number(total).toFixed(2);
+
+            // Update income cards
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+
+            let todayIncome = 0;
+            let weeklyIncome = 0;
+            let monthlyIncome = 0;
+            let totalRevenue = 0;
+
+            list.forEach(b => {
+                const incomeDate = b?.date ? new Date(b.date) : null;
+                const amount = num(b?.totalPrice, 0);
+
+                totalRevenue += amount;
+
+                if (incomeDate) {
+                    if (incomeDate >= today) todayIncome += amount;
+                    if (incomeDate >= weekAgo) weeklyIncome += amount;
+                    if (incomeDate >= monthAgo) monthlyIncome += amount;
+                }
+            });
+
+            // Update income cards
+            document.getElementById('today-income').textContent = money(todayIncome);
+            document.getElementById('weekly-income').textContent = money(weeklyIncome);
+            document.getElementById('monthly-income').textContent = money(monthlyIncome);
+            document.getElementById('total-revenue').textContent = money(totalRevenue);
+
+            tbody.innerHTML = "";
+
+            if (!list.length) {
+                tbody.innerHTML = "<tr><td colspan='5'>No PAID finished bookings</td></tr>";
+                return;
+            }
+
+            list.forEach(b => {
+                const tr = document.createElement("tr");
+                const stationName = safe(b?.charger?.station?.name, "Unknown Station");
+                const date = b?.date ? new Date(b.date).toLocaleDateString() : "N/A";
+                tr.innerHTML = `
+                    <td>${b.id || 'N/A'}</td>
+                    <td>Rs. ${(b.totalPrice || 0).toFixed(2)}</td>
+                    <td>${b.totalHours || 0}</td>
+                    <td>${stationName}</td>
+                    <td>${date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update charts
+            updateIncomeCharts(list);
+
+        } catch (e) {
+            console.error("Income load error:", e);
+            tbody.innerHTML = "<tr><td colspan='5' style='color: red;'>Error loading income data</td></tr>";
+            totalEl.innerText = "Rs. 0.00";
+        }
+    }
+
+    function updateIncomeCharts(incomeList = []) {
+        // Monthly Income Chart
+        const monthlyData = {};
+        const now = new Date();
+
+        // Initialize last 6 months
+        for (let i = 5; i >= 0; i--) {
+            const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, '0')}`;
+            monthlyData[key] = 0;
+        }
+
+        // Fill data
+        incomeList.forEach(b => {
+            if (b?.date) {
+                const date = new Date(b.date);
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                if (monthlyData[key] !== undefined) {
+                    monthlyData[key] += num(b?.totalPrice, 0);
+                }
+            }
+        });
+
+        const monthlyCtx = document.getElementById('income-chart')?.getContext('2d');
+        if (monthlyCtx) {
+            if (incomeChart) incomeChart.destroy();
+
+            incomeChart = new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(monthlyData),
+                    datasets: [{
+                        label: 'Monthly Income (Rs)',
+                        data: Object.values(monthlyData),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Station Income Chart
+        const stationData = {};
+        incomeList.forEach(b => {
+            const stationName = safe(b?.charger?.station?.name, 'Unknown Station');
+            if (!stationData[stationName]) stationData[stationName] = 0;
+            stationData[stationName] += num(b?.totalPrice, 0);
+        });
+
+        const stationCtx = document.getElementById('station-income-chart')?.getContext('2d');
+        if (stationCtx) {
+            if (stationIncomeChart) stationIncomeChart.destroy();
+
+            stationIncomeChart = new Chart(stationCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(stationData),
+                    datasets: [{
+                        label: 'Income by Station (Rs)',
+                        data: Object.values(stationData),
+                        backgroundColor: [
+                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+                            '#06b6d4', '#84cc16', '#f97316', '#6366f1', '#ec4899'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    }
     // Helpers
     const $$ = (sel) => document.querySelector(sel);
     const $$$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -1484,4 +1673,5 @@
 </script>
 </body>
 </html>
+
 
