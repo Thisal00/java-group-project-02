@@ -70,7 +70,7 @@ public class Post {
         return comments == null ? 0 : comments.size();
     }
 
-    // ✅ SEND USER NAME SAFELY TO FRONTEND
+    // SEND USER NAME SAFELY TO FRONTEND
     @Transient
     public String getUserName() {
         if (user == null) return "User";
@@ -80,7 +80,7 @@ public class Post {
         return user.getEmail();
     }
 
-    // ✅ SEND USER EMAIL IF NEEDED
+    // SEND USER EMAIL IF NEEDED
     @Transient
     public String getUserEmail() {
         if (user == null) return "";
@@ -155,4 +155,5 @@ public class Post {
         this.comments = comments;
     }
 }
+
 
