@@ -897,11 +897,97 @@
         </div>
     </div>
 </div>
+<!-- PROFILE -->
+    <section id="profile-view" class="view-content" style="display:none;">
+        <div class="card pad">
+            <h2 class="section-title" style="margin:0;">My Profile Settings</h2>
+            <p class="muted" style="margin:6px 0 0;">Update your details.</p>
 
+            <div class="form-container" style="padding:0; margin-top:12px;">
+                <form id="profile-form">
+                    <label for="profile-email">Email (Read-only)</label>
+                    <input type="email" id="profile-email" disabled value="Loading...">
+
+                    <label for="profile-fullname">Full Name</label>
+                    <input type="text" id="profile-fullname" placeholder="Full Name" required>
+
+                    <label for="profile-nic">National ID (NIC)</label>
+                    <input type="text" id="profile-nic" placeholder="NIC" required>
+
+                    <label for="profile-phone">Phone Number</label>
+                    <input type="tel" id="profile-phone" placeholder="Phone Number" required>
+
+                    <label for="profile-type">User Type (Read-only)</label>
+                    <input type="text" id="profile-type" disabled value="Loading...">
+
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+                    </div>
+                </form>
+
+                <div style="margin-top:16px;">
+                    <h3 class="section-title">Account Actions</h3>
+                    <button class="btn btn-ghost" style="width:100%;" id="reset-password-btn"><i class="fa-solid fa-key"></i> Reset Password</button>
+                    <button class="btn btn-danger" style="width:100%; margin-top:10px;" id="delete-account-btn"><i class="fa-solid fa-user-xmark"></i> Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<div class="toast-wrap" id="toast-wrap"></div>
 <!-- Leaflet JS for Map -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+    
+    // Profile
+    
+    async function loadProfileData() {
+        try {
+            const user = await apiJson('/api/owner/profile').catch(() => apiJson('/api/manager/profile'));
+            state.profile = user;
+
+            document.getElementById('profile-email').value = safe(user?.email,'');
+            document.getElementById('profile-fullname').value = safe(user?.fullName,'');
+            document.getElementById('profile-nic').value = safe(user?.nic,'');
+            document.getElementById('profile-phone').value = safe(user?.phoneNumber,'');
+            document.getElementById('profile-type').value = safe(user?.userType,'STATION_MANAGER');
+
+            document.getElementById('welcome-text').textContent = Welcome, ${safe(user?.fullName,'Station Manager')}!;
+        } catch (e) {
+            console.warn('profile load error:', e);
+            document.getElementById('profile-email').value = 'Profile endpoint not available';
+        }
+    }
+
+    async function handleProfileSubmit(e) {
+        e.preventDefault();
+        const payload = {
+            fullName: document.getElementById('profile-fullname').value,
+            nic: document.getElementById('profile-nic').value,
+            phoneNumber: document.getElementById('profile-phone').value
+        };
+
+        try {
+            await apiJson('/api/owner/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(() =>
+                apiJson('/api/manager/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+            );
+            toast('ok','Profile','Profile updated successfully!');
+            loadProfileData();
+        } catch (e) {
+            console.error('profile save error:', e);
+            toast('bad','Profile', Failed to update profile.);
+        }
+    }
     // Helpers
     const $$ = (sel) => document.querySelector(sel);
     const $$$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -1398,3 +1484,4 @@
 </script>
 </body>
 </html>
+
