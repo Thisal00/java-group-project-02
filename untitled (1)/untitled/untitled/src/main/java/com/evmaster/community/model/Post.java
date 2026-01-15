@@ -35,35 +35,30 @@ public class Post {
     @Column(name = "image_path")
     private String imagePath;
 
-    // =========================
-    // 🙈 HIDDEN BY ADMIN
-    // =========================
+
+    // HIDDEN BY ADMIN
     @Column(nullable = false)
     private boolean hidden = false;
 
-    // =========================
-    // ⏰ CREATED TIME
-    // =========================
+  
+    // CREATED TIME
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // =========================
-    // ❤️ LIKES
-    // =========================
+  
+    // LIKES
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<PostLike> likes = new ArrayList<>();
 
-    // =========================
-    // 💬 COMMENTS
-    // =========================
+ 
+    //  COMMENTS
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Comment> comments = new ArrayList<>();
 
-    // =========================
-    // 📊 VIRTUAL FIELDS FOR API
-    // =========================
+
+    // VIRTUAL FIELDS FOR API
 
     @Transient
     public int getLikeCount() {
@@ -92,9 +87,9 @@ public class Post {
         return user.getEmail();
     }
 
-    // =========================
+ 
     // GETTERS & SETTERS
-    // =========================
+
 
     public Long getId() {
         return id;
@@ -160,3 +155,4 @@ public class Post {
         this.comments = comments;
     }
 }
+
