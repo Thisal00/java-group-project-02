@@ -110,3 +110,101 @@
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EV Master - Owner Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+
+
+    <!-- Profile -->
+    <div id="profile-view" class="view-content" style="display:none;">
+        <h2>My Profile</h2>
+        <div class="form-container">
+            <form id="profile-form">
+                <label>Email (Read only)</label>
+                <input type="email" id="profile-email" disabled />
+
+                <label>Full Name</label>
+                <input type="text" id="profile-fullname" required />
+
+                <label>NIC</label>
+                <input type="text" id="profile-nic" required />
+
+                <label>Phone</label>
+                <input type="tel" id="profile-phone" required />
+
+                <label>User Type</label>
+                <input type="text" id="profile-type" disabled />
+
+                <button class="btn-primary" type="submit"><i class="fa-solid fa-user-pen"></i> Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+   
+    
+
+   
+    // Profile
+    
+    async function loadProfileData(){
+        try{
+            const res = await apiFetch('/api/owner/profile');
+            const u = await readResBody(res);
+            if(u && typeof u === 'object'){
+                document.getElementById('profile-email').value = u.email || '';
+                document.getElementById('profile-fullname').value = u.fullName || '';
+                document.getElementById('profile-nic').value = u.nic || '';
+                document.getElementById('profile-phone').value = u.phoneNumber || '';
+                document.getElementById('profile-type').value = u.userType || 'EV_OWNER';
+
+                const name = u.fullName ? u.fullName : (u.email || 'EV Owner');
+                document.getElementById('welcome-message').textContent = `Welcome, ${name}!`;
+            }
+        }catch(e){
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e);
+        }
+    }
+
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            fullName: document.getElementById('profile-fullname').value,
+            nic: document.getElementById('profile-nic').value,
+            phoneNumber: document.getElementById('profile-phone').value
+        };
+        try{
+            const res = await apiFetch('/api/owner/profile', {
+                method:'PUT',
+                headers:{ 'Content-Type':'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await readResBody(res);
+            if(res.ok){
+                alert("✅ Profile updated");
+                await loadProfileData();
+            }else{
+                alert(`❌ Update failed (${res.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+            }
+        }catch(e2){
+            if(String(e2.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e2);
+            alert("❌ Network error while saving profile");
+        }
+    });
+</script>
+</body>
+</html>
