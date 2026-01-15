@@ -14,10 +14,11 @@ public class CurrentUserController {
     public CurrentUserController(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
-//===================== GET CURRENT USER =====================
+// GET CURRENT USER 
     @GetMapping
     public User getCurrentUser(Authentication authentication) {
         String email = authentication.getName(); // logged email
         return userRepository.findByEmail(email).orElseThrow();
     }
 }
+
