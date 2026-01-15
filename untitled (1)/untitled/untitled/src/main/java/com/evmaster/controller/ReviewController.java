@@ -33,7 +33,7 @@ public class ReviewController {
         this.userRepository = userRepository;
     }
 
-    // ================= CREATE REVIEW =================
+    //CREATE REVIEW
     @PostMapping(consumes = "multipart/form-data")
     public Review createReview(
             @RequestParam Long bookingId,
@@ -47,21 +47,21 @@ public class ReviewController {
             throw new RuntimeException("Not logged in");
         }
 
-        // ================= GET LOGGED USER =================
+        //GET LOGGED USER 
         String email = authentication.getName();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // ================= LOAD BOOKING =================
+        //LOAD BOOKING 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        // ================= SECURITY CHECK =================
+        //SECURITY CHECK
         if (!booking.getEvOwner().getId().equals(user.getId())) {
             throw new RuntimeException("You can only review your own bookings");
         }
 
-        // ================= STATUS CHECK =================
+        //STATUS CHECK
         if (!"FINISHED".equalsIgnoreCase(booking.getStatus())) {
             throw new RuntimeException("You can only review FINISHED bookings");
         }
@@ -70,22 +70,22 @@ public class ReviewController {
             throw new RuntimeException("You can only review PAID bookings");
         }
 
-        // ================= DUPLICATE CHECK =================
+        //DUPLICATE CHECK
         if (reviewRepository.existsByBooking(booking)) {
             throw new RuntimeException("Review already exists for this booking");
         }
 
-        // ================= CREATE REVIEW =================
+        //CREATE REVIEW
         Review review = new Review();
         review.setBooking(booking);
-        review.setEvOwner(user);                         // ✅ FIXED
-        review.setStation(booking.getCharger().getStation()); // ✅ FIXED
+        review.setEvOwner(user);                        
+        review.setStation(booking.getCharger().getStation()); 
         review.setRating(rating);
         review.setComments(comments);
         review.setReviewDate(LocalDateTime.now());
         review.setApproved(false);
 
-        // ================= IMAGE SAVE =================
+        //IMAGE SAVE
         if (image != null && !image.isEmpty()) {
 
             Path uploadDir = Paths.get("uploads/reviews");
@@ -103,3 +103,4 @@ public class ReviewController {
         return reviewRepository.save(review);
     }
 }
+
