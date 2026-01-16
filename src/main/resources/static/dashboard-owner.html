@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EV Master - Owner Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+    <style>
+        :root{
+            --color-primary:#4A90E2;
+            --color-secondary:#50E3C2;
+            --color-accent:#FFC107;
+            --color-text:#333;
+            --color-bg:#F4F7F6;
+            --color-sidebar:#FFFFFF;
+            --color-card:#FFFFFF;
+            --color-shadow:rgba(0,0,0,.1);
+            --color-danger:#e74c3c;
+            --color-success:#2ecc71;
+            --color-input-bg:#EAECEF;
+        }
+        body.dark-mode{
+            --color-text:#E0E0E0;
+            --color-bg:#1A1A1A;
+            --color-sidebar:#2C2C2C;
+            --color-card:#1E1E1E;
+            --color-shadow:rgba(0,0,0,.5);
+            --color-primary:#79B8F3;
+            --color-input-bg:#2C2C2C;
+        }
+        body{
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            margin:0; display:flex; height:100vh;
+            background:var(--color-bg); color:var(--color-text);
+            overflow:hidden; transition:.25s;
+        }
+        .sidebar{
+            width:250px; background:var(--color-sidebar);
+            padding:20px 0; box-shadow:2px 0 6px var(--color-shadow);
+            display:flex; flex-direction:column; overflow-y:auto;
+        }
+        .logo{
+            text-align:center; font-size:1.6em; font-weight:900;
+            color:var(--color-primary); margin-bottom:18px;
+        }
+        .nav-item{
+            display:flex; align-items:center;
+            padding:14px 18px; cursor:pointer; user-select:none;
+            text-decoration:none; color:var(--color-text);
+            transition:.18s;
+            font-size:.96em;
+        }
+        .nav-item i{ margin-right:10px; width:22px; text-align:center; }
+        .nav-item:hover,.nav-item.active{
+            background:var(--color-primary); color:var(--color-sidebar);
+        }
+        .main-content{ flex-grow:1; padding:18px; overflow-y:auto; }
+        .header{
+            display:flex; justify-content:space-between; align-items:center;
+            gap:10px; flex-wrap:wrap; margin-bottom:18px;
+        }
+        .mode-toggle-button{
+            width:100%; margin-top:10px;
+            padding:10px 12px; border-radius:10px;
+            border:1px solid var(--color-primary);
+            background:var(--color-card); color:var(--color-primary);
+            cursor:pointer; transition:.2s;
+        }
+        .mode-toggle-button:hover{ background:var(--color-primary); color:#fff; }
+
+        .dashboard-grid{
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+            gap:16px; margin-bottom:18px;
+        }
+        .stat-card{
+            background:var(--color-card);
+            border-radius:14px;
+            box-shadow:0 6px 14px var(--color-shadow);
+            padding:18px;
+        }
+        .stat-card .value{ font-size:2em; font-weight:800; color:var(--color-primary); }
+        .stat-card .label{ opacity:.75; margin-top:6px; font-size:.92em; }
+
+        .filter-bar{
+            background:var(--color-card);
+            padding:14px; border-radius:12px;
+            box-shadow:0 6px 14px var(--color-shadow);
+            margin-bottom:16px;
+            display:flex; gap:12px; align-items:center;
+        }
+        .map-wrapper{
+            min-height:220px;
+            padding:18px;
+            border-radius:14px;
+            background:var(--color-card);
+            box-shadow:0 6px 14px var(--color-shadow);
+        }
+
+        .data-table{ width:100%; border-collapse:collapse; margin-top:10px; }
+        .data-table th, .data-table td{
+            padding:12px 14px; border-bottom:1px solid var(--color-bg);
+            text-align:left;
+        }
+        .data-table th{
+            font-size:.82em; letter-spacing:.04em;
+            text-transform:uppercase; color:var(--color-primary);
+        }
+        .data-table tr:hover{ background:var(--color-input-bg); }
+
+        .form-container{
+            background:var(--color-card);
+            border-radius:14px;
+            box-shadow:0 6px 14px var(--color-shadow);
+            padding:18px;
+        }
+        .form-container input, .form-container select, .form-container textarea{
+            width:100%; padding:10px 12px; border-radius:10px;
+            border:1px solid #cfd6df; background:var(--color-input-bg);
+            color:var(--color-text); box-sizing:border-box;
+            margin:8px 0;
+        }
+
+        .btn-primary,.btn-danger,.btn-success,.btn-muted{
+            border:none; border-radius:10px;
+            padding:10px 12px; cursor:pointer; color:#fff;
+            display:inline-flex; align-items:center; gap:8px;
+            justify-content:center;
+            transition:.18s;
+            font-weight:700;
+            white-space:nowrap;
+        }
+        .btn-primary{ background:var(--color-primary); }
+        .btn-danger{ background:var(--color-danger); }
+        .btn-success{ background:var(--color-success); }
+        .btn-muted{ background:#9aa4b2; cursor:not-allowed; opacity:.85; }
+        .btn-primary:hover,.btn-danger:hover,.btn-success:hover{ filter:brightness(.95); }
+
+        .section-header{
+            margin-top:22px;
+            padding-bottom:8px;
+            border-bottom:2px solid var(--color-secondary);
+        }
+
+        .charger-card-list{ margin-top:12px; }
+        .charger-card-item{
+            padding:12px;
+            border:1px solid var(--color-input-bg);
+            border-radius:14px;
+            margin-bottom:10px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            flex-wrap:wrap;
+        }
+        .charger-card-item:hover{ border-color:var(--color-primary); }
+        .pill{
+            display:inline-block;
+            padding:4px 10px;
+            border-radius:999px;
+            background:var(--color-input-bg);
+            font-size:12px; font-weight:800;
+            opacity:.92;
+        }
+        .note{
+            background:var(--color-input-bg);
+            padding:12px;
+            border-radius:12px;
+        }
+
+        .status-ACTIVE{ color:var(--color-success); font-weight:800; }
+        .status-FINISHED{ color:var(--color-primary); font-weight:800; }
+        .status-CANCELLED{ color:var(--color-danger); font-weight:800; }
+        .status-PENDING{ color: #d39e00; font-weight:800; } /* amber */
+        .status-CASH_PENDING{ color: #b36b00; font-weight:800; } /* darker amber */
+        .status-CONFIRMED{ color: #20639b; font-weight:800; } /* blue */
+
+        .toast{
+            position:fixed; right:16px; bottom:16px;
+            background:rgba(0,0,0,.85);
+            color:#fff; padding:12px 14px; border-radius:12px;
+            max-width:420px; z-index:99999;
+            display:none;
+            box-shadow:0 12px 26px rgba(0,0,0,.25);
+            font-size:14px;
+            white-space:pre-wrap;
+        }
+        .toast .x{ float:right; cursor:pointer; opacity:.85; }
+        .toast .x:hover{ opacity:1; }
+
+        /* ---------- Payment Modal ---------- */
+        .modal-overlay{
+            position:fixed; inset:0; background:rgba(0,0,0,.55);
+            display:none; align-items:center; justify-content:center; z-index:99998;
+        }
+        .modal{
+            width:100%; max-width:520px; background:var(--color-card); border-radius:12px;
+            padding:18px; box-shadow:0 18px 48px rgba(0,0,0,.35); transform:translateY(-8px);
+            animation:modalIn .18s ease-out;
+        }
+        @keyframes modalIn { from { opacity:0; transform:translateY(-18px) } to { opacity:1; transform:translateY(0) } }
+        .modal h3{ margin:0 0 8px 0; color:var(--color-primary); }
+        .payment-methods{ display:flex; gap:8px; margin:8px 0 14px; }
+        .pm-pill{
+            padding:8px 10px; border-radius:10px; cursor:pointer; display:flex; gap:8px; align-items:center;
+            border:1px solid #e6e6e6; background:var(--color-input-bg);
+        }
+        .pm-pill.active{ border-color:var(--color-primary); background:linear-gradient(90deg,var(--color-primary),#7ec9ff); color:#fff; }
+        .card-grid{ display:grid; grid-template-columns:1fr 120px; gap:8px; align-items:center; }
+        .muted-small{ font-size:.86em; opacity:.72; margin-top:6px }
+        /* spinner in button */
+        .fa-spinner{ margin-right:8px; }
+
+        @media (max-width: 820px){
+            .sidebar{ width:74px; }
+            .sidebar .nav-text{ display:none; }
+            .main-content{ padding:12px; }
+            .filter-bar{ flex-direction:column; align-items:stretch; }
+            .card-grid{ grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+
+<body>
+<script>
+    (function(){
+        const saved = localStorage.getItem('mode');
+        if(saved === 'dark') document.body.classList.add('dark-mode');
+    })();
+</script>
+
+<div class="toast" id="toast">
+    <span class="x" onclick="document.getElementById('toast').style.display='none'">✕</span>
+    <div id="toastText"></div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="paymentModalOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+        <h3 id="pmTitle"><i class="fa-solid fa-credit-card"></i> Complete Payment</h3>
+
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-weight:800;" id="payStationName">Station</div>
+            <div id="payAmount" style="font-weight:900; color:var(--color-primary)">Rs. 0.00</div>
+        </div>
+
+        <div class="payment-methods" id="paymentMethods">
+            <div class="pm-pill active" data-method="CARD" onclick="selectPayMethod('CARD')"><i class="fa-solid fa-credit-card"></i> Card</div>
+            <div class="pm-pill" data-method="BANK" onclick="selectPayMethod('BANK')"><i class="fa-solid fa-university"></i> Bank</div>
+            <div class="pm-pill" data-method="CASH" onclick="selectPayMethod('CASH')"><i class="fa-solid fa-money-bill"></i> Cash</div>
+        </div>
+
+        <div id="cardArea">
+            <label>Cardholder name</label>
+            <input id="cardName" placeholder="Full name on card" />
+
+            <label>Card number</label>
+            <input id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" />
+
+            <div class="card-grid">
+                <div>
+                    <label>Expiry (MM/YY)</label>
+                    <input id="cardExpiry" placeholder="MM/YY" />
+                </div>
+                <div>
+                    <label>CVV</label>
+                    <input id="cardCvv" placeholder="CVV" maxlength="4" />
+                </div>
+            </div>
+            <div class="muted-small">For demo: any card values accepted. Backend will simulate charge.</div>
+        </div>
+
+        <div id="cashArea" style="display:none;">
+            <p class="muted-small">Select "Cash" to mark booking as waiting for admin approval. Admin must confirm payment to mark booking as paid.</p>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
+            <button class="btn-muted" onclick="closePaymentModal()">Cancel</button>
+            <button id="doPaymentBtn" class="btn-success" onclick="doPayment()"><i class="fa-solid fa-check"></i> Pay Now</button>
+        </div>
+    </div>
+</div>
+
+<div class="sidebar">
+    <div class="logo">
+        ⚡ EV Master
+    </div>
+
+    <!-- MAIN -->
+    <div style="padding:0 10px;">
+        <div style="opacity:.5; font-size:12px; margin:8px 10px;">MAIN</div>
+
+        <a class="nav-item active" onclick="showView('dashboard')">
+            <i class="fas fa-chart-line"></i>
+            <span class="nav-text">Dashboard</span>
+        </a>
+
+        <a class="nav-item" onclick="showView('map')">
+            <i class="fas fa-map-location-dot"></i>
+            <span class="nav-text">Stations Map</span>
+        </a>
+
+        <a class="nav-item" onclick="showView('bookings')">
+            <i class="fas fa-calendar-days"></i>
+            <span class="nav-text">My Bookings</span>
+        </a>
+    </div>
+
+    <!-- COMMUNITY -->
+    <div style="padding:0 10px; margin-top:12px;">
+        <div style="opacity:.5; font-size:12px; margin:8px 10px;">COMMUNITY</div>
+
+        <a class="nav-item" href="/community.html">
+            <i class="fas fa-users"></i>
+            <span class="nav-text">Community</span>
+        </a>
+
+        <a class="nav-item" onclick="showView('reviews')">
+            <i class="fas fa-star-half-stroke"></i>
+            <span class="nav-text">My Reviews</span>
+        </a>
+    </div>
+
+    <!-- VEHICLES -->
+    <div style="padding:0 10px; margin-top:12px;">
+        <div style="opacity:.5; font-size:12px; margin:8px 10px;">VEHICLES</div>
+
+        <a class="nav-item" onclick="showView('vehicles')">
+            <i class="fas fa-car-side"></i>
+            <span class="nav-text">My Vehicles</span>
+        </a>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div style="padding:0 10px; margin-top:12px;">
+        <div style="opacity:.5; font-size:12px; margin:8px 10px;">ACCOUNT</div>
+
+        <a class="nav-item" onclick="showView('profile')">
+            <i class="fas fa-user-gear"></i>
+            <span class="nav-text">My Profile</span>
+        </a>
+    </div>
+
+    <!-- BOTTOM -->
+    <div style="margin-top:auto; padding:10px;">
+        <a class="nav-item" href="/api/auth/logout" style="color:#e74c3c;">
+            <i class="fas fa-right-from-bracket"></i>
+            <span class="nav-text">Logout</span>
+        </a>
+
+        <button class="mode-toggle-button" id="mode-toggle-btn">
+            <i class="fas fa-moon"></i> Night Mode
+        </button>
+    </div>
+</div>
+
+
+<div class="main-content">
+    <div class="header">
+        <h1 id="view-title">Dashboard</h1>
+        <p id="welcome-message">Welcome, EV Owner!</p>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-view" class="view-content" style="display:block;">
+        <div class="dashboard-grid">
+            <div class="stat-card"><div class="value" id="total-bookings">0</div><div class="label">Total Bookings</div></div>
+            <div class="stat-card"><div class="value" id="total-reviews">0</div><div class="label">Total Reviews</div></div>
+            <div class="stat-card"><div class="value" id="total-expenses">Rs. 0.00</div><div class="label">Total Expenses</div></div>
+            <div class="stat-card"><div class="value" id="total-cars">0</div><div class="label">Total Cars Added</div></div>
+        </div>
+
+        <div class="stat-card" style="margin-top:12px;">
+            <h3>Upcoming & Active Bookings</h3>
+            <div id="active-bookings-list">Loading...</div>
+        </div>
+
+        <div class="stat-card" style="margin-top:12px;">
+            <h3>Finished Bookings to Review</h3>
+            <div id="pending-reviews-list">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div id="map-view" class="view-content" style="display:none;">
+        <h2>Map & Stations</h2>
+
+        <div class="filter-bar">
+            <button class="btn-primary" style="width:100%;" onclick="openMapViewer()">
+                <i class="fas fa-map-marker-alt"></i> Click to Open Station Map
+            </button>
+        </div>
+
+        <div class="map-wrapper">
+            <p id="map-help-text" style="text-align:center; padding:10px; margin:0;">
+                Click <b>Open Station Map</b> → select station → it will show here.
+            </p>
+
+            <div id="station-details-view" style="display:none;">
+                <h3 id="selected-station-name"></h3>
+                <p id="selected-station-address" style="opacity:.8;"></p>
+
+                <div id="station-charger-list" class="charger-card-list"></div>
+
+                <h4 class="section-header">Book Charger</h4>
+                <div id="booking-controls-area"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings -->
+    <div id="bookings-view" class="view-content" style="display:none;">
+        <h2>My Bookings</h2>
+
+        <h3 class="section-header">Active & Upcoming</h3>
+        <div id="active-bookings-content"></div>
+
+        <h3 class="section-header">Past Bookings</h3>
+        <div id="past-bookings-content"></div>
+
+        <h3 class="section-header">Total Expenditure</h3>
+        <p id="total-expenditure" style="font-size:1.5em; font-weight:900; color:var(--color-primary);">Rs. 0.00</p>
+    </div>
+
+    <!-- Reviews -->
+    <div id="reviews-view" class="view-content" style="display:none;">
+        <h2>My Reviews</h2>
+
+        <div id="review-modal" class="form-container" style="display:none; margin-top:12px;">
+            <h3>Submit Review</h3>
+            <input type="hidden" id="review-booking-id" />
+            <p>Reviewing: <b id="review-station-name"></b></p>
+
+            <label>Rating</label>
+            <select id="review-rating">
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+            </select>
+
+            <label>Comments</label>
+            <textarea id="review-comments" rows="4"></textarea>
+
+            <label>Upload Image (optional)</label>
+            <input type="file" id="review-image" accept="image/*" />
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button id="submit-review-btn" class="btn-success"><i class="fa-solid fa-paper-plane"></i> Submit</button>
+                <button class="btn-danger" onclick="hideReviewModal()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+            </div>
+        </div>
+
+        <div id="reviews-content-list" class="stat-card" style="margin-top:12px;">
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Vehicles -->
+    <div id="vehicles-view" class="view-content" style="display:none;">
+        <h2>My Vehicles</h2>
+
+        <div class="form-container">
+            <h3>Add/Edit Vehicle</h3>
+            <form id="vehicle-form">
+                <input type="hidden" id="vehicle-id" />
+                <input type="text" id="car-name" placeholder="Car Name" required />
+                <input type="text" id="register-number" placeholder="Register Number" required />
+                <input type="text" id="brand" placeholder="Brand" />
+                <input type="text" id="model" placeholder="Model" />
+                <input type="number" id="year" placeholder="Year" />
+                <select id="vehicle-connector-type" required>
+                    <option value="">Select Connector Type</option>
+                    <option value="Type2">Type 2</option>
+                    <option value="CHAdeMO">CHAdeMO</option>
+                    <option value="CCS">CCS/Combo</option>
+                    <option value="ccs">ccs</option>
+                </select>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Vehicle</button>
+                    <button class="btn-primary" type="button" onclick="resetVehicleForm()"><i class="fa-solid fa-eraser"></i> Clear</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="stat-card" style="margin-top:12px;">
+            <h3>Added Vehicles</h3>
+            <table class="data-table">
+                <thead><tr><th>Name</th><th>Reg No.</th><th>Connector</th><th>Action</th></tr></thead>
+                <tbody id="vehicle-list-body"><tr><td colspan="4">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Profile -->
+    <div id="profile-view" class="view-content" style="display:none;">
+        <h2>My Profile</h2>
+        <div class="form-container">
+            <form id="profile-form">
+                <label>Email (Read only)</label>
+                <input type="email" id="profile-email" disabled />
+
+                <label>Full Name</label>
+                <input type="text" id="profile-fullname" required />
+
+                <label>NIC</label>
+                <input type="text" id="profile-nic" required />
+
+                <label>Phone</label>
+                <input type="tel" id="profile-phone" required />
+
+                <label>User Type</label>
+                <input type="text" id="profile-type" disabled />
+
+                <button class="btn-primary" type="submit"><i class="fa-solid fa-user-pen"></i> Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // =========================
+    // Debug / Toast + Global Errors
+    // =========================
+    function toast(msg){
+        const t = document.getElementById('toast');
+        const tt = document.getElementById('toastText');
+        tt.textContent = String(msg || '');
+        t.style.display = 'block';
+        clearTimeout(window.__toastTimer);
+        window.__toastTimer = setTimeout(()=>{ t.style.display='none'; }, 6000);
+    }
+    window.addEventListener('error', (e)=>{
+        console.error('JS Error:', e.error || e.message);
+        toast("JS Error: " + (e.error?.message || e.message || 'unknown'));
+    });
+    window.addEventListener('unhandledrejection', (e)=>{
+        console.error('Promise Error:', e.reason);
+        toast("Promise Error: " + (e.reason?.message || e.reason || 'unknown'));
+    });
+
+    // =========================
+    // Helpers
+    // =========================
+    function escapeHtml(str){
+        return String(str ?? "")
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;")
+            .replaceAll("'","&#039;");
+    }
+    function safeJSString(str){ return JSON.stringify(String(str ?? "")); }
+    function money(n){ const x = Number(n || 0); return `Rs. ${x.toFixed(2)}`; }
+    function parseMoney(str){
+        return parseFloat(String(str || '')
+            .replace(/Rs\.?/gi,'')
+            .replace(/,/g,'')
+            .trim()
+        ) || 0;
+    }
+
+    async function apiFetch(url, options={}){
+        const opts = {
+            credentials: 'include',
+            headers: { 'Accept':'application/json', ...(options.headers || {}) },
+            ...options
+        };
+        const res = await fetch(url, opts);
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        if (res.status === 401 || res.status === 403) throw new Error("SESSION_EXPIRED");
+        if (ct.includes('text/html') && !url.includes('/api/public/')) throw new Error("SESSION_EXPIRED");
+        return res;
+    }
+
+    async function readResBody(res){
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        if (ct.includes('application/json')) {
+            try { return await res.json(); } catch { return null; }
+        }
+        return await res.text();
+    }
+
+    let cachedVehicles = [];
+    let allBookings = [];
+    let allReviews  = [];
+    let liveStations = [];
+
+    // Payment modal state
+    let __currentPaymentBookingId = null;
+    let __currentPaymentAmount = 0;
+
+    // =========================
+    // Mode Toggle
+    // =========================
+    const modeBtn = document.getElementById('mode-toggle-btn');
+    modeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const dark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('mode', dark ? 'dark' : 'light');
+        modeBtn.innerHTML = dark ? '<i class="fas fa-sun"></i> Day Mode' : '<i class="fas fa-moon"></i> Night Mode';
+    });
+    (function initMode(){
+        const saved = localStorage.getItem('mode');
+        const dark = (saved === 'dark');
+        document.body.classList.toggle('dark-mode', dark);
+        modeBtn.innerHTML = dark ? '<i class="fas fa-sun"></i> Day Mode' : '<i class="fas fa-moon"></i> Night Mode';
+    })();
+
+
+    // Navigation
+
+    const viewContents = document.querySelectorAll('.view-content');
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewTitle = document.getElementById('view-title');
+
+    function showView(viewId){
+        viewContents.forEach(v => v.style.display = 'none');
+        navItems.forEach(n => n.classList.remove('active'));
+
+        const view = document.getElementById(viewId + '-view');
+        if(view) view.style.display = 'block';
+
+        const nav = document.querySelector(`[onclick="showView('${viewId}')"]`);
+        if(nav){
+            nav.classList.add('active');
+            const txt = nav.querySelector('.nav-text');
+            viewTitle.textContent = txt ? txt.textContent : viewId.toUpperCase();
+        }else{
+            viewTitle.textContent = viewId.toUpperCase();
+        }
+
+        if(viewId === 'map'){
+            document.getElementById('station-details-view').style.display = 'none';
+            document.getElementById('map-help-text').style.display = 'block';
+            fetchVehicles(true);
+        }
+        if(viewId === 'vehicles') fetchVehicles(false);
+        if(viewId === 'dashboard' || viewId === 'bookings' || viewId === 'reviews') loadBookingAndReviewData();
+        if(viewId === 'profile') loadProfileData();
+    }
+
+
+    // Startup
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        showView('dashboard');
+        try{
+            await loadProfileData();
+            await loadBookingAndReviewData();
+            await fetchVehicles(true);
+        }catch(e){
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+            }
+        }
+    });
+
+
+    // Map Viewer
+
+    function openMapViewer(){
+        const url = `${window.location.origin}/map_viewer.html?v=${Date.now()}`;
+        const width = 1000, height = 750;
+        const left = (screen.width/2) - (width/2);
+        const top  = (screen.height/2) - (height/2);
+        window.open(url, 'MapViewerWindow', `width=${width},height=${height},top=${top},left=${left},resizable=yes`);
+    }
+
+    window.addEventListener('message', async (event) => {
+        if(event.origin !== window.location.origin) return;
+        if(event.data && event.data.source === 'evMasterMapSelection' && event.data.stationId){
+            showView('map');
+
+            const stationId = Number(event.data.stationId);
+            if(!cachedVehicles.length) await fetchVehicles(true);
+
+            liveStations = await fetchStationsPublic();
+            const station = liveStations.find(s => Number(s.id) === stationId);
+
+            if(!station){
+                alert("Selected station not found in /api/public/stations");
+                return;
+            }
+            if(!Array.isArray(station.chargers)) station.chargers = [];
+            renderStationDetailsForBooking(station);
+        }
+    });
+
+    async function fetchStationsPublic(){
+        try{
+            const res = await fetch('/api/public/stations', { method:'GET', headers:{'Accept':'application/json'} });
+            if(!res.ok) throw new Error('Stations fetch failed: ' + res.status);
+            const data = await res.json();
+            if(Array.isArray(data)) return data;
+            if(data && Array.isArray(data.data)) return data.data;
+            return [];
+        }catch(e){
+            console.error(e);
+            alert("Stations load failed. Check backend /api/public/stations");
+            return [];
+        }
+    }
+
+    function goToVehiclesWithConnector(connectorType){
+        showView('vehicles');
+        const sel = document.getElementById('vehicle-connector-type');
+        if(sel){
+            sel.value = connectorType;
+            if(!sel.value) sel.value = String(connectorType || '').toLowerCase();
+            sel.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+    }
+
+    function renderStationDetailsForBooking(station){
+        const container = document.getElementById('station-details-view');
+        const bookingControls = document.getElementById('booking-controls-area');
+
+        document.getElementById('selected-station-name').textContent = station.name || 'Unknown Station';
+        document.getElementById('selected-station-address').textContent = station.address || '';
+
+        const chargers = Array.isArray(station.chargers) ? station.chargers : [];
+        const list = document.getElementById('station-charger-list');
+
+        if(!chargers.length){
+            list.innerHTML = `
+        <div class="note">
+          ⚠️ No chargers returned for this station.<br>
+          <b>Backend fix:</b> /api/public/stations must include station.chargers (OneToMany).
+        </div>
+      `;
+        }else{
+            let html = `<h4>Available Chargers:</h4>`;
+
+            chargers.forEach(ch => {
+                const chargerId = Number(ch.id);
+                const idOk = Number.isFinite(chargerId) && chargerId > 0;
+
+                const available = Number(ch.availableSlots ?? 0);
+                const total = Number(ch.totalSlots ?? 0);
+                const connector = String(ch.connectorType || '');
+                const pricePerHour = Number(ch.pricePerHour || 0);
+
+                const compatibleCars = cachedVehicles.filter(v =>
+                    String(v.connectorType || '').toLowerCase() === connector.toLowerCase()
+                );
+
+                const canBook = idOk && available > 0 && compatibleCars.length > 0;
+
+                html += `
+          <div class="charger-card-item">
+            <div style="min-width:280px;">
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <strong>${escapeHtml(ch.type || 'Charger')}</strong>
+                <span class="pill">${escapeHtml(connector || 'Connector')}</span>
+                <span class="pill">${escapeHtml(ch.powerOutputKw ?? 0)}kW</span>
+              </div>
+              <div style="margin-top:6px; opacity:.85;">
+                Available: ${available}/${total} &nbsp; | &nbsp; Price: ${money(pricePerHour)}/hr
+              </div>
+
+              ${!idOk ? `<div style="margin-top:6px; color:var(--color-danger); font-weight:800;">Charger ID missing (backend data problem)</div>` : ''}
+              ${available <= 0 ? `<div style="margin-top:6px; color:var(--color-danger); font-weight:800;">No slots available</div>` : ''}
+              ${(available > 0 && compatibleCars.length === 0)
+                    ? `<div style="margin-top:6px; color:var(--color-accent); font-weight:800;">
+                      Add a vehicle with <b>${escapeHtml(connector)}</b> to book
+                   </div>`
+                    : ''
+                }
+            </div>
+
+            ${
+                    canBook
+                        ? `<button class="btn-success"
+                   onclick='setupBookingForm(${chargerId}, ${safeJSString(connector)}, ${pricePerHour})'>
+                   <i class="fa-solid fa-bolt"></i> Book Now
+                 </button>`
+                        : (available > 0 && idOk
+                                ? `<button class="btn-primary"
+                     onclick='goToVehiclesWithConnector(${safeJSString(connector)})'>
+                     <i class="fa-solid fa-car"></i> Add Vehicle
+                   </button>`
+                                : `<button class="btn-muted" disabled>Book Now</button>`
+                        )
+                }
+          </div>
+        `;
+            });
+
+            list.innerHTML = html;
+        }
+
+        container.style.display = 'block';
+        document.getElementById('map-help-text').style.display = 'none';
+        bookingControls.innerHTML = '';
+    }
+
+
+    // Booking form + submit
+
+    function setupBookingForm(chargerId, connectorType, pricePerHour){
+        const bookingControls = document.getElementById('booking-controls-area');
+
+        if(!Number.isFinite(Number(chargerId)) || Number(chargerId) <= 0){
+            bookingControls.innerHTML = `
+        <div class="note" style="border-left:4px solid var(--color-danger);">
+          ❌ Charger ID is invalid. Backend must return charger.id.
+        </div>
+      `;
+            return;
+        }
+
+        const compatibleCars = cachedVehicles.filter(v =>
+            String(v.connectorType || '').toLowerCase() === String(connectorType || '').toLowerCase()
+        );
+
+        if(!compatibleCars.length){
+            bookingControls.innerHTML = `
+        <div class="note" style="border-left:4px solid var(--color-accent);">
+          No compatible cars found for connector: <b>${escapeHtml(connectorType)}</b><br>
+          Please add a vehicle first.
+        </div>
+        <button class="btn-primary" style="margin-top:10px;"
+          onclick='goToVehiclesWithConnector(${safeJSString(connectorType)})'>
+          <i class="fa-solid fa-car"></i> Add Vehicle
+        </button>
+      `;
+            return;
+        }
+
+        bookingControls.innerHTML = `
+      <form id="active-booking-form" class="form-container" style="border:none; box-shadow:none; padding:0;">
+        <input type="hidden" id="booking-charger-id" value="${Number(chargerId)}">
+
+        <label>Car (Connector: ${escapeHtml(connectorType)})</label>
+        <select id="booking-car-select" required>
+          ${compatibleCars.map(v => `<option value="${v.id}">${escapeHtml(v.name)} (${escapeHtml(v.registerNumber)})</option>`).join('')}
+        </select>
+
+        <label>Duration (Hours)</label>
+        <select id="booking-hours" required onchange="updateTotalPriceForm(this.value, ${Number(pricePerHour || 0)})">
+          <option value="1">1 Hour</option>
+          <option value="2">2 Hours</option>
+          <option value="3">3 Hours</option>
+          <option value="4">4 Hours</option>
+        </select>
+
+        <label>Total Price</label>
+        <input type="text" id="booking-total" value="${money(pricePerHour)}" readonly>
+
+        <button type="submit" class="btn-success" style="width:100%; margin-top:12px;">
+          <i class="fa-solid fa-check"></i> Confirm Booking for ${money(pricePerHour)}
+        </button>
+
+        <div style="margin-top:10px; opacity:.75; font-size:12px;">
+          If booking fails, read the popup message (it shows the backend reason).
+        </div>
+      </form>
+    `;
+
+        document.getElementById('active-booking-form').addEventListener('submit', handleNewBookingSubmit);
+        bookingControls.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    function updateTotalPriceForm(hours, pricePerHour){
+        const form = document.getElementById('active-booking-form');
+        if(!form) return;
+        const total = Number(hours || 0) * Number(pricePerHour || 0);
+
+        document.getElementById('booking-total').value = money(total);
+        const btn = form.querySelector('button[type="submit"]');
+        if(btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> Confirm Booking for ${money(total)}`;
+    }
+
+    async function handleNewBookingSubmit(e){
+        e.preventDefault();
+
+        const chargerId = Number(document.getElementById('booking-charger-id').value);
+        const vehicleId = Number(document.getElementById('booking-car-select').value);
+        const totalHours = Number(document.getElementById('booking-hours').value);
+        const totalPrice = parseMoney(document.getElementById('booking-total').value);
+
+        const payload = {
+            charger: { id: chargerId },
+            vehicle: { id: vehicleId },
+            totalHours,
+            totalPrice
+        };
+
+        const form = document.getElementById('active-booking-form');
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Booking...`;
+
+        try{
+            const res = await apiFetch('/api/owner/bookings', {
+                method:'POST',
+                headers:{ 'Content-Type':'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const body = await readResBody(res);
+
+            if(res.ok){
+                const createdId = (body && body.id) ? body.id : null;
+                toast('Booking created as PENDING.');
+                await loadBookingAndReviewData();
+                if(createdId){
+                    // open payment modal
+                    payNow(createdId, body);
+                } else {
+                    showView('bookings');
+                    toast('Booking created. Please open My Bookings to complete payment.');
+                }
+            }else{
+                const msg = (typeof body === 'string') ? body : JSON.stringify(body);
+                alert(`❌ Booking failed (${res.status}) : ${msg}`);
+            }
+        }catch(err){
+            console.error(err);
+            if(String(err.message) === 'SESSION_EXPIRED'){
+                alert("❌ Session expired. Login again.");
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            alert("❌ Network/Server error during booking submit. Check console.");
+        }finally{
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+
+    // Payment modal functions
+
+    function payNow(bookingId, createdBody){
+        // bookingId: number
+        // createdBody: optional booking object from server
+        __currentPaymentBookingId = bookingId;
+        const booking = (createdBody && typeof createdBody === 'object') ? createdBody : allBookings.find(b => Number(b.id) === Number(bookingId));
+        __currentPaymentAmount = (booking && booking.totalPrice) ? Number(booking.totalPrice) : 0;
+
+        // update modal content
+        document.getElementById('payAmount').textContent = money(__currentPaymentAmount);
+        document.getElementById('payStationName').textContent = booking?.charger?.station?.name || 'Station';
+        selectPayMethod('CARD'); // default
+        openPaymentModal();
+    }
+
+    function openPaymentModal(){
+        const ov = document.getElementById('paymentModalOverlay');
+        ov.style.display = 'flex';
+        ov.setAttribute('aria-hidden', 'false');
+        // focus first input
+        setTimeout(()=> document.getElementById('cardName').focus(), 80);
+    }
+
+    function closePaymentModal(){
+        const ov = document.getElementById('paymentModalOverlay');
+        ov.style.display = 'none';
+        ov.setAttribute('aria-hidden', 'true');
+        __currentPaymentBookingId = null;
+        __currentPaymentAmount = 0;
+        // clear card inputs
+        document.getElementById('cardName').value = '';
+        document.getElementById('cardNumber').value = '';
+        document.getElementById('cardExpiry').value = '';
+        document.getElementById('cardCvv').value = '';
+    }
+
+    function selectPayMethod(method){
+        document.querySelectorAll('.pm-pill').forEach(p => p.classList.remove('active'));
+        const active = document.querySelector(`.pm-pill[data-method="${method}"]`);
+        if(active) active.classList.add('active');
+
+        document.getElementById('cardArea').style.display = (method === 'CARD' || method === 'BANK') ? 'block' : 'none';
+        document.getElementById('cashArea').style.display = (method === 'CASH') ? 'block' : 'none';
+
+        // tweak button label
+        const btn = document.getElementById('doPaymentBtn');
+        if(btn) btn.innerHTML = `<i class="fa-solid fa-check"></i> Pay (${method})`;
+        // store selection
+        document.getElementById('paymentModalOverlay').dataset.method = method;
+    }
+
+    async function doPayment(){
+        if(!__currentPaymentBookingId) {
+            toast('No booking selected for payment.');
+            return;
+        }
+        const ov = document.getElementById('paymentModalOverlay');
+        const method = ov.dataset.method || 'CARD';
+        const btn = document.getElementById('doPaymentBtn');
+        btn.disabled = true;
+        const old = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+
+        try{
+            if(method === 'CARD' || method === 'BANK'){
+                // Basic client-side card validation (light)
+                const cardNum = (document.getElementById('cardNumber').value || '').replace(/\s+/g,'');
+                const name = (document.getElementById('cardName').value || '').trim();
+                if(!cardNum || cardNum.length < 12){ alert('Enter a valid card number'); btn.disabled=false; btn.innerHTML=old; return; }
+                if(!name){ alert('Enter cardholder name'); btn.disabled=false; btn.innerHTML=old; return; }
+
+                // call confirm endpoint
+                const res = await apiFetch(`/api/payment/confirm/${__currentPaymentBookingId}`, { method:'POST' });
+                const body = await readResBody(res);
+                if(res.ok){
+                    toast('✅ Payment successful. Booking confirmed.');
+                    closePaymentModal();
+                    await loadBookingAndReviewData();
+                    showView('bookings');
+                }else{
+                    alert('Payment failed: ' + (typeof body === 'string' ? body : JSON.stringify(body)));
+                }
+            }else if(method === 'CASH'){
+                // call cash endpoint
+                const res = await apiFetch(`/api/payment/cash/${__currentPaymentBookingId}`, { method:'POST' });
+                const body = await readResBody(res);
+                if(res.ok){
+                    toast('💵 Cash selected — waiting admin confirmation.');
+                    closePaymentModal();
+                    await loadBookingAndReviewData();
+                    showView('bookings');
+                }else{
+                    alert('Cash request failed: ' + (typeof body === 'string' ? body : JSON.stringify(body)));
+                }
+            }else{
+                alert('Unsupported payment method: ' + method);
+            }
+        }catch(e){
+            console.error(e);
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            alert('Network error while processing payment.');
+        }finally{
+            btn.disabled = false;
+            btn.innerHTML = old;
+        }
+    }
+
+    // Handle external payment gateway redirects (if any)
+    async function handlePaymentResult(){
+        const params = new URLSearchParams(window.location.search);
+        const bookingId = params.get('bookingId');
+        const status = params.get('status'); // 'success' or 'failed'
+        if(!bookingId) return;
+        history.replaceState(null, '', window.location.pathname);
+
+        if(status === 'success'){
+            try{
+                const res = await apiFetch(`/api/payment/confirm/${bookingId}`, { method: 'POST' });
+                const body = await readResBody(res);
+                if(res.ok){
+                    toast('Payment confirmed. Booking marked as PAID.');
+                    await loadBookingAndReviewData();
+                    showView('bookings');
+                }else{
+                    alert('Payment confirm failed: ' + (typeof body === 'string' ? body : JSON.stringify(body)));
+                }
+            }catch(e){
+                if(String(e.message) === 'SESSION_EXPIRED'){
+                    window.location.href = '/index.html?error=session_expired';
+                    return;
+                }
+                console.error(e);
+                alert('Network error confirming payment.');
+            }
+        } else {
+            toast('Payment not completed or canceled.');
+        }
+    }
+    window.addEventListener('DOMContentLoaded', handlePaymentResult);
+
+
+    // Core data loaders & renderers
+
+    async function loadBookingAndReviewData(){
+        try{
+            const [bRes, rRes, vRes] = await Promise.all([
+                apiFetch('/api/owner/bookings'),
+                apiFetch('/api/owner/reviews'),
+                apiFetch('/api/owner/vehicles')
+            ]);
+
+            const b = await readResBody(bRes);
+            const r = await readResBody(rRes);
+            const v = await readResBody(vRes);
+
+            allBookings = Array.isArray(b) ? b : [];
+            allReviews  = Array.isArray(r) ? r : [];
+            cachedVehicles = Array.isArray(v) ? v : [];
+
+            document.getElementById('total-cars').textContent = cachedVehicles.length;
+
+            if(document.getElementById('dashboard-view').style.display === 'block') renderDashboard();
+            if(document.getElementById('bookings-view').style.display === 'block') renderBookings();
+            if(document.getElementById('reviews-view').style.display === 'block') renderReviews();
+        }catch(e){
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e);
+        }
+    }
+
+    function renderDashboard(){
+        const totalExpenses = allBookings
+            .filter(b => String(b.status || '').toUpperCase() !== 'CANCELLED')
+            .reduce((s,b) => s + Number(b.totalPrice || 0), 0);
+
+        const activeBookings = allBookings.filter(b => ['ACTIVE','PENDING','CONFIRMED','CASH_PENDING'].includes(String(b.status || '').toUpperCase()));
+
+        const pendingReviews = allBookings.filter(b =>
+            String(b.status || '').toUpperCase() === 'FINISHED' &&
+            !allReviews.some(r => r.booking && Number(r.booking.id) === Number(b.id))
+        );
+
+        document.getElementById('total-bookings').textContent = allBookings.length;
+        document.getElementById('total-reviews').textContent  = allReviews.length;
+        document.getElementById('total-expenses').textContent = money(totalExpenses);
+
+        const activeBox = document.getElementById('active-bookings-list');
+        activeBox.innerHTML = activeBookings.length
+            ? activeBookings.map(b => `
+          <div style="margin:8px 0;">
+            <i class="fas fa-clock"></i>
+            ${escapeHtml(b.charger?.station?.name || 'Station')}
+            (${escapeHtml(b.totalHours || 0)} hrs) - <b>${money(b.totalPrice)}</b>
+          </div>
+        `).join('')
+            : `<div class="note">No active bookings.</div>`;
+
+        const pendingBox = document.getElementById('pending-reviews-list');
+        pendingBox.innerHTML = pendingReviews.length
+            ? pendingReviews.map(b => `
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:8px 0;">
+            <span><i class="fas fa-pen-square"></i> ${escapeHtml(b.charger?.station?.name || 'Station')}</span>
+            <button class="btn-success" style="padding:8px 10px;"
+              onclick='showReviewModal(${Number(b.id)}, ${safeJSString(b.charger?.station?.name || "")})'>
+              Review
+            </button>
+          </div>
+        `).join('')
+            : `<div class="note">No bookings pending review.</div>`;
+    }
+
+    function renderBookings(){
+        const active = allBookings
+            .filter(b => !['FINISHED','CANCELLED'].includes(String(b.status || '').toUpperCase()))
+            .sort((a,b) => new Date(a.startTime) - new Date(b.startTime));
+
+        const past = allBookings
+            .filter(b => ['FINISHED','CANCELLED'].includes(String(b.status || '').toUpperCase()))
+            .sort((a,b) => new Date(b.startTime) - new Date(a.startTime));
+
+        const total = allBookings
+            .filter(b => String(b.status || '').toUpperCase() !== 'CANCELLED')
+            .reduce((s,b) => s + Number(b.totalPrice || 0), 0);
+
+        document.getElementById('total-expenditure').textContent = money(total);
+
+        renderBookingTable(active, 'active-bookings-content', true);
+        renderBookingTable(past, 'past-bookings-content', false);
+    }
+
+    function renderBookingTable(bookings, containerId, isActive){
+        const box = document.getElementById(containerId);
+        if(!bookings.length){
+            box.innerHTML = `<div class="note">No ${isActive ? 'active' : 'past'} bookings.</div>`;
+            return;
+        }
+
+        let html = `<table class="data-table"><thead>
+      <tr><th>Station</th><th>Charger / Car</th><th>Date/Time</th><th>Price</th><th>Booking Status</th><th>Payment</th><th>Action</th></tr>
+    </thead><tbody>`;
+
+        bookings.forEach(b => {
+            const status = String(b.status || '').toUpperCase();
+            const paid = !!b.paid || String(b.paymentStatus || '').toUpperCase() === 'PAID' || status === 'CONFIRMED';
+            const isReviewed = allReviews.some(r => r.booking && Number(r.booking.id) === Number(b.id));
+
+            let actions = '';
+            if(isActive){
+                if(!paid){
+                    actions += `<button class="btn-primary" onclick="payNow(${Number(b.id)})">Pay Now</button> `;
+                }
+                actions += `<button class="btn-danger" onclick="cancelBooking(${Number(b.id)})">Cancel</button>`;
+            } else {
+                if(status === 'FINISHED' && !isReviewed && paid){
+                    actions = `<button class="btn-success" onclick='showReviewModal(${Number(b.id)}, ${safeJSString(b.charger?.station?.name || "")})'>Review</button>`;
+                } else if(status === 'FINISHED' && isReviewed){
+                    actions = 'Reviewed';
+                } else {
+                    actions = 'N/A';
+                }
+            }
+
+            const paymentBadge = paid ? '<span style="color:var(--color-success);font-weight:700;">PAID</span>' :
+                (status === 'CASH_PENDING' ? '<span style="color:var(--color-accent);font-weight:700;">CASH PENDING</span>' : '<span style="color:var(--color-danger);font-weight:700;">UNPAID</span>');
+
+            html += `<tr>
+        <td>${escapeHtml(b.charger?.station?.name || 'Station')}</td>
+        <td>${escapeHtml(b.charger?.name || 'Charger')} / ${escapeHtml(b.vehicle?.name || 'Vehicle')}</td>
+        <td>${b.startTime ? new Date(b.startTime).toLocaleString() : 'N/A'} (${escapeHtml(b.totalHours || 0)} hrs)</td>
+        <td>${money(b.totalPrice)}</td>
+        <td class="status-${status}">${escapeHtml(status)}</td>
+        <td>${paymentBadge}</td>
+        <td>${actions}</td>
+      </tr>`;
+        });
+
+        html += `</tbody></table>`;
+        box.innerHTML = html;
+    }
+
+    async function cancelBooking(bookingId){
+        if(!confirm(`Cancel booking ${bookingId}?`)) return;
+        try{
+            const res = await apiFetch(`/api/owner/bookings/${bookingId}`, { method:'DELETE' });
+            const body = await readResBody(res);
+            if(res.ok){
+                alert("✅ Cancelled");
+                await loadBookingAndReviewData();
+            }else{
+                alert(`❌ Cancel failed (${res.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+            }
+        }catch(e){
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e);
+            alert("❌ Network error while cancelling");
+        }
+    }
+    // =========================
+    // Reviews (with image upload) - FINAL FIXED VERSION
+    // =========================
+
+    function renderReviews(){
+        const box = document.getElementById('reviews-content-list');
+        if(!box) return;
+
+        box.innerHTML = '';
+
+        if(!Array.isArray(allReviews) || allReviews.length === 0){
+            box.innerHTML = `<div class="note">You have not submitted any reviews yet.</div>`;
+            return;
+        }
+
+        const sorted = [...allReviews].sort((a,b) => new Date(b.reviewDate || 0) - new Date(a.reviewDate || 0));
+
+        box.innerHTML = sorted.map(r => {
+            const rating = Math.max(0, Math.min(5, Number(r.rating || 0)));
+            const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+
+            const stationName =
+                r.station?.name ||
+                r.booking?.charger?.station?.name ||
+                'Station';
+
+            const imgHtml = r.imageUrl
+                ? `<div style="margin-top:8px;">
+                   <img src="${escapeHtml(r.imageUrl)}"
+                        style="max-width:200px; border-radius:10px;"
+                        onerror="this.style.display='none'"/>
+               </div>`
+                : '';
+
+            const approvedText = r.approved
+                ? '<span style="color:var(--color-success); font-weight:700;">Approved</span>'
+                : '<span style="color:var(--color-accent); font-weight:700;">Pending</span>';
+
+            const dateText = r.reviewDate ? new Date(r.reviewDate).toLocaleString() : '';
+
+            return `
+        <div class="stat-card" style="margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <h4 style="margin:0; color:var(--color-primary);">
+              ${escapeHtml(stationName)}
+            </h4>
+            <div style="opacity:.6; font-size:.85em;">
+              Booking ID: ${escapeHtml(r.booking?.id ?? '')}
+            </div>
+          </div>
+
+          <div style="color:var(--color-accent); font-size:1.2em; margin-top:6px;">${stars}</div>
+
+          <div style="margin-top:6px;">${escapeHtml(r.comments || '')}</div>
+
+          ${imgHtml}
+
+          <div style="opacity:.6; font-size:.85em; margin-top:6px;">
+            ${dateText} &middot; ${approvedText}
+          </div>
+        </div>
+        `;
+        }).join('');
+    }
+
+    function showReviewModal(bookingId, stationName){
+        const modal = document.getElementById('review-modal');
+        if(!modal) return;
+
+        document.getElementById('review-booking-id').value = bookingId;
+        document.getElementById('review-station-name').textContent = stationName || '';
+        document.getElementById('review-comments').value = '';
+        document.getElementById('review-rating').value = '5';
+        document.getElementById('review-image').value = '';
+
+        modal.style.display = 'block';
+        const list = document.getElementById('reviews-content-list');
+        if(list) list.style.display = 'none';
+    }
+
+    function hideReviewModal(){
+        const modal = document.getElementById('review-modal');
+        if(modal) modal.style.display = 'none';
+
+        const list = document.getElementById('reviews-content-list');
+        if(list) list.style.display = 'block';
+    }
+
+    async function submitReview(){
+        const bookingId = Number(document.getElementById('review-booking-id').value);
+        const rating = Number(document.getElementById('review-rating').value);
+        const comments = document.getElementById('review-comments').value.trim();
+        const fileInput = document.getElementById('review-image');
+        const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+        if(!bookingId || !rating || !comments){
+            alert("Please fill rating and comments");
+            return;
+        }
+
+        const btn = document.getElementById('submit-review-btn');
+        if(!btn) return;
+
+        btn.disabled = true;
+        const old = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Submitting...`;
+
+        try{
+            const formData = new FormData();
+            formData.append('bookingId', bookingId);
+            formData.append('rating', rating);
+            formData.append('comments', comments);
+            if(file) formData.append('image', file);
+
+            const res = await fetch(`/api/owner/reviews`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+
+            if(res.status === 401 || res.status === 403){
+                alert("Session expired. Please login again.");
+                window.location.href = "/index.html";
+                return;
+            }
+
+            let responseBody;
+            const contentType = (res.headers.get('content-type') || '').toLowerCase();
+            if(contentType.includes('application/json')){
+                responseBody = await res.json();
+            }else{
+                responseBody = await res.text();
+            }
+
+            if(res.ok){
+                alert("✅ Review submitted successfully!");
+                hideReviewModal();
+                await loadBookingAndReviewData();
+                showView('reviews');
+            }else{
+                let errorMessage = `Review failed (${res.status}): `;
+                if(typeof responseBody === 'string') errorMessage += responseBody;
+                else if(responseBody?.message) errorMessage += responseBody.message;
+                else errorMessage += 'Unknown error';
+
+                alert(errorMessage);
+                console.error('Review submission error:', responseBody);
+            }
+
+        }catch(e){
+            console.error('Network error:', e);
+            alert("❌ Network error while submitting review.");
+        }finally{
+            btn.disabled = false;
+            btn.innerHTML = old;
+        }
+    }
+
+    // Attach button safely
+    (function(){
+        const btn = document.getElementById('submit-review-btn');
+        if(btn){
+            btn.addEventListener('click', submitReview);
+        }
+    })();
+
+
+    // Vehicles
+
+    async function fetchVehicles(silent=false){
+        try{
+            const res = await apiFetch('/api/owner/vehicles');
+            const vehicles = await readResBody(res);
+            cachedVehicles = Array.isArray(vehicles) ? vehicles : [];
+            document.getElementById('total-cars').textContent = cachedVehicles.length;
+            if(!silent) renderVehicles(cachedVehicles);
+        }catch(e){
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e);
+            if(!silent){
+                document.getElementById('vehicle-list-body').innerHTML =
+                    `<tr><td colspan="4" style="color:var(--color-danger); font-weight:800;">Network/Server error.</td></tr>`;
+            }
+        }
+    }
+
+    function renderVehicles(vehicles){
+        const tbody = document.getElementById('vehicle-list-body');
+        tbody.innerHTML = '';
+        if(!vehicles.length){
+            tbody.innerHTML = `<tr><td colspan="4">No vehicles added yet.</td></tr>`;
+            return;
+        }
+        vehicles.forEach(v => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+        <td>${escapeHtml(v.name || '')} (${escapeHtml(v.brand || '')})</td>
+        <td>${escapeHtml(v.registerNumber || '')}</td>
+        <td>${escapeHtml(v.connectorType || '')}</td>
+        <td style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-primary" onclick='editVehicle(${safeJSString(JSON.stringify(v))})'>Edit</button>
+          <button class="btn-danger" onclick="deleteVehicle(${Number(v.id)})">Delete</button>
+        </td>
+      `;
+        });
+    }
+
+    document.getElementById('vehicle-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('vehicle-id').value;
+
+        const payload = {
+            id: id ? Number(id) : null,
+            name: document.getElementById('car-name').value,
+            registerNumber: document.getElementById('register-number').value,
+            brand: document.getElementById('brand').value,
+            model: document.getElementById('model').value,
+            year: Number(document.getElementById('year').value || 0),
+            connectorType: document.getElementById('vehicle-connector-type').value
+        };
+
+        try{
+            const res = await apiFetch('/api/owner/vehicles', {
+                method:'POST',
+                headers:{ 'Content-Type':'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await readResBody(res);
+            if(res.ok){
+                alert("✅ Vehicle saved");
+                resetVehicleForm();
+                await fetchVehicles(false);
+                await loadBookingAndReviewData();
+            }else{
+                alert(`❌ Save failed (${res.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+            }
+        }catch(e2){
+            if(String(e2.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e2);
+            alert("❌ Network error while saving vehicle");
+        }
+    });
+
+    function editVehicle(vehicleJsonString){
+        const v = JSON.parse(JSON.parse(vehicleJsonString));
+        document.getElementById('vehicle-id').value = v.id ?? '';
+        document.getElementById('car-name').value = v.name || '';
+        document.getElementById('register-number').value = v.registerNumber || '';
+        document.getElementById('brand').value = v.brand || '';
+        document.getElementById('model').value = v.model || '';
+        document.getElementById('year').value = v.year || '';
+        document.getElementById('vehicle-connector-type').value = v.connectorType || '';
+        showView('vehicles');
+    }
+    function resetVehicleForm(){
+        document.getElementById('vehicle-form').reset();
+        document.getElementById('vehicle-id').value = '';
+    }
+    async function deleteVehicle(id){
+        if(!confirm("Delete this vehicle?")) return;
+        try{
+            const res = await apiFetch(`/api/owner/vehicles/${id}`, { method:'DELETE' });
+            const body = await readResBody(res);
+            if(res.ok){
+                alert("✅ Deleted");
+                await fetchVehicles(false);
+                await loadBookingAndReviewData();
+            }else{
+                alert(`❌ Delete failed (${res.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+            }
+        }catch(e){
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e);
+            alert("❌ Network error while deleting");
+        }
+    }
+
+
+    // Profile
+
+    async function loadProfileData(){
+        try{
+            const res = await apiFetch('/api/owner/profile');
+            const u = await readResBody(res);
+            if(u && typeof u === 'object'){
+                document.getElementById('profile-email').value = u.email || '';
+                document.getElementById('profile-fullname').value = u.fullName || '';
+                document.getElementById('profile-nic').value = u.nic || '';
+                document.getElementById('profile-phone').value = u.phoneNumber || '';
+                document.getElementById('profile-type').value = u.userType || 'EV_OWNER';
+
+                const name = u.fullName ? u.fullName : (u.email || 'EV Owner');
+                document.getElementById('welcome-message').textContent = `Welcome, ${name}!`;
+            }
+        }catch(e){
+            if(String(e.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e);
+        }
+    }
+
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            fullName: document.getElementById('profile-fullname').value,
+            nic: document.getElementById('profile-nic').value,
+            phoneNumber: document.getElementById('profile-phone').value
+        };
+        try{
+            const res = await apiFetch('/api/owner/profile', {
+                method:'PUT',
+                headers:{ 'Content-Type':'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const body = await readResBody(res);
+            if(res.ok){
+                alert("✅ Profile updated");
+                await loadProfileData();
+            }else{
+                alert(`❌ Update failed (${res.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+            }
+        }catch(e2){
+            if(String(e2.message) === 'SESSION_EXPIRED'){
+                window.location.href = '/index.html?error=session_expired';
+                return;
+            }
+            console.error(e2);
+            alert("❌ Network error while saving profile");
+        }
+    });
+</script>
+</body>
+</html>

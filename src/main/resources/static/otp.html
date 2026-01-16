@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ChargePoint – Reset Password</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #060b13;
+            --cyan: #00d1ff;
+            --green: #39ff14;
+            --border: rgba(255,255,255,0.12);
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        .container-fluid { position: relative; z-index: 2; }
+
+        .soft-glass {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+        }
+
+        .form-control {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px;
+            border-radius: 14px;
+        }
+
+        .form-control:focus {
+            border-color: var(--cyan);
+            box-shadow: none;
+        }
+
+        .btn-energy {
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            border: none;
+            color: #000;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 14px;
+        }
+
+        .message {
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .message.error { color: #ff4d4d; }
+        .message.success { color: #39ff14; }
+
+        .toggle-link a {
+            cursor: pointer;
+            color: #00d1ff;
+            text-decoration: none;
+        }
+        .toggle-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="container-fluid">
+    <div class="min-vh-100 d-flex align-items-center justify-content-center">
+
+        <div class="soft-glass p-4" style="width:420px;">
+
+            <!-- FORGOT PASSWORD -->
+            <form id="forgot-form">
+                <h4 class="text-center mb-3">Forgot Password</h4>
+
+                <div id="forgot-message" class="message"></div>
+
+                <input id="forgot-email" type="email" class="form-control mb-3"
+                       placeholder="Enter your email" required>
+
+                <button class="btn btn-energy w-100 mb-2">Send OTP</button>
+
+                <div class="toggle-link text-center">
+                    <a href="login.html">Back to Login</a>
+                </div>
+            </form>
+
+            <!-- RESET PASSWORD -->
+            <form id="reset-form" style="display:none;">
+                <h4 class="text-center mb-3">Reset Password</h4>
+
+                <div id="reset-message" class="message"></div>
+
+                <input id="reset-otp" class="form-control mb-3"
+                       placeholder="6-digit OTP" required>
+
+                <input id="reset-new-password" type="password"
+                       class="form-control mb-3" placeholder="New Password" required>
+
+                <input type="hidden" id="reset-email-holder">
+
+                <button class="btn btn-energy w-100 mb-2">Reset Password</button>
+
+                <div class="toggle-link text-center">
+                    <a href="login.html">Back to Login</a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ===== OTP REQUEST ===== */
+    document.getElementById('forgot-form').addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const email = document.getElementById('forgot-email').value;
+        const msg = document.getElementById('forgot-message');
+
+        try {
+            const r = await fetch('/api/auth/forgot-password', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},<!DOCTYPE html>
+            <html lang="en">
+                <head>
+                <meta charset="UTF-8">
+                <title>ChargePoint – Reset Password</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
+                        <style>
+                            :root {
+                            --bg: #060b13;
+                            --cyan: #00d1ff;
+                            --green: #39ff14;
+                            --border: rgba(255,255,255,0.12);
+                        }
+
+                            body {
+                            margin: 0;
+                            background: var(--bg);
+                            color: #fff;
+                            font-family: 'Space Grotesk', sans-serif;
+                            overflow: hidden;
+                        }
+
+                            canvas {
+                            position: fixed;
+                            inset: 0;
+                            z-index: 0;
+                        }
+
+                            .container-fluid {
+                            position: relative;
+                            z-index: 2;
+                        }
+
+                            .soft-glass {
+                            background: rgba(255,255,255,0.06);
+                            border: 1px solid var(--border);
+                            border-radius: 28px;
+                        }
+
+                            .form-control {
+                            background: rgba(0,0,0,0.35);
+                            border: 1px solid var(--border);
+                            color: #fff;
+                            padding: 12px;
+                            border-radius: 14px;
+                        }
+
+                            .form-control:focus {
+                            border-color: var(--cyan);
+                            box-shadow: none;
+                        }
+
+                            .btn-energy {
+                            background: linear-gradient(90deg, var(--cyan), var(--green));
+                            border: none;
+                            color: #000;
+                            font-weight: 600;
+                            padding: 12px;
+                            border-radius: 14px;
+                        }
+
+                            .message {
+                            font-size: 14px;
+                            text-align: center;
+                            margin-bottom: 10px;
+                        }
+                            .message.error { color: #ff4d4d; }
+                            .message.success { color: #39ff14; }
+
+                            .toggle-link a {
+                            cursor: pointer;
+                            color: #00d1ff;
+                            text-decoration: none;
+                        }
+                            .toggle-link a:hover {
+                            text-decoration: underline;
+                        }
+
+                            /* === SEND OTP LOADER === */
+                            .btn-energy.loading {
+                            pointer-events: none;
+                            opacity: 0.85;
+                        }
+
+                            .btn-energy .spinner {
+                            width: 18px;
+                            height: 18px;
+                            border: 2px solid rgba(0,0,0,0.25);
+                            border-top-color: #000;
+                            border-radius: 50%;
+                            animation: spin 0.7s linear infinite;
+                            display: inline-block;
+                            vertical-align: middle;
+                        }
+
+                            @keyframes spin {
+                            to { transform: rotate(360deg); }
+                        }
+
+                        </style>
+                    </head>
+
+                    <body>
+
+                    <canvas id="bg"></canvas>
+
+                    <div class="container-fluid">
+                        <div class="min-vh-100 d-flex align-items-center justify-content-center">
+
+                            <div class="soft-glass p-4" style="width:420px;">
+
+                                <!-- FORGOT PASSWORD -->
+                                <form id="forgot-form">
+                                    <h4 class="text-center mb-3">Forgot Password</h4>
+
+                                    <div id="forgot-message" class="message"></div>
+
+                                    <input id="forgot-email" type="email" class="form-control mb-3"
+                                           placeholder="Enter your email" required>
+
+                                        <button type="submit" class="btn btn-energy w-100 mb-2" id="sendOtpBtn">
+                                            <span class="btn-text">Send OTP</span>
+                                        </button>
+
+                                        <div class="toggle-link text-center">
+                                            <a href="login.html">Back to Login</a>
+                                        </div>
+                                </form>
+
+                                <!-- RESET PASSWORD -->
+                                <form id="reset-form" style="display:none;">
+                                    <h4 class="text-center mb-3">Reset Password</h4>
+
+                                    <div id="reset-message" class="message"></div>
+
+                                    <input id="reset-otp" class="form-control mb-3"
+                                           placeholder="6-digit OTP" required>
+
+                                        <input id="reset-new-password" type="password"
+                                               class="form-control mb-3" placeholder="New Password" required>
+
+                                            <input type="hidden" id="reset-email-holder">
+
+                                                <button type="submit" class="btn btn-energy w-100 mb-2">
+                                                    Reset Password
+                                                </button>
+
+                                                <div class="toggle-link text-center">
+                                                    <a href="login.html">Back to Login</a>
+                                                </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= OTP REQUEST ================= -->
+                    <script>
+                        document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+
+                        const email = document.getElementById('forgot-email').value.trim();
+                        const msg = document.getElementById('forgot-message');
+                        const btn = document.getElementById('sendOtpBtn');
+
+                        // === START LOADING ===
+                        btn.classList.add('loading');
+                        btn.innerHTML = `<span class="spinner"></span> Sending...`;
+
+                        msg.textContent = '';
+                        msg.className = 'message';
+
+                        try {
+                        const r = await fetch('/api/auth/forgot-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+
+                        const t = await r.text();
+                        msg.textContent = t;
+
+                        if (r.ok) {
+                        msg.className = 'message success';
+                        document.getElementById('reset-email-holder').value = email;
+
+                        setTimeout(() => {
+                        document.getElementById('forgot-form').style.display = 'none';
+                        document.getElementById('reset-form').style.display = 'block';
+                    }, 1500);
+                    } else {
+                        msg.className = 'message error';
+                    }
+
+                    } catch {
+                        msg.textContent = 'Network error';
+                        msg.className = 'message error';
+                    } finally {
+                        // === STOP LOADING ===
+                        btn.classList.remove('loading');
+                        btn.innerHTML = `<span class="btn-text">Send OTP</span>`;
+                    }
+                    });
+
+</script>
+
+<!-- ================= OTP VERIFY + RESET ================= -->
+<script>
+    document.getElementById('reset-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('reset-email-holder').value;
+        const otp = document.getElementById('reset-otp').value.trim();
+        const newPassword = document.getElementById('reset-new-password').value;
+        const msg = document.getElementById('reset-message');
+
+        msg.textContent = '';
+        msg.className = 'message';
+
+        try {
+            const verify = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp })
+            });
+
+            if (!verify.ok) {
+                msg.textContent = 'Invalid OTP';
+                msg.className = 'message error';
+                return;
+            }
+
+            const reset = await fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, newPassword })
+            });
+
+            const t = await reset.text();
+            msg.textContent = t;
+
+            if (reset.ok) {
+                msg.className = 'message success';
+                setTimeout(() => window.location.href = 'login.html', 2000);
+            } else {
+                msg.className = 'message error';
+            }
+
+        } catch {
+            msg.textContent = 'Network error';
+            msg.className = 'message error';
+        }
+    });
+</script>
+
+<!-- ================= BACKGROUND ENERGY FIELD ================= -->
+<script>
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+        canvas.width = innerWidth;
+        canvas.height = innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function createParticle() {
+        return {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random() * 3 + 1,
+            speed: Math.random() * 1.2 + 0.4
+        };
+    }
+
+    const particles = Array.from({ length: 120 }, createParticle);
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+            p.y -= p.speed;
+            if (p.y < 0) p.y = canvas.height;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,209,255,0.6)';
+            ctx.fill();
+        });
+        requestAnimationFrame(animate);
+    }
+    animate();
+</script>
+
+</body>
+</html>
+
+body: JSON.stringify({ email })
+});
+
+const t = await r.text();
+msg.textContent = t;
+
+if (r.ok) {
+msg.className = 'message success';
+document.getElementById('reset-email-holder').value = email;
+
+setTimeout(() => {
+document.getElementById('forgot-form').style.display = 'none';
+document.getElementById('reset-form').style.display = 'block';
+}, 1500);
+} else {
+msg.className = 'message error';
+}
+} catch {
+msg.textContent = 'Network error';
+msg.className = 'message error';
+}
+});
+</script>
+
+<script>
+    /* ===== OTP VERIFY + RESET ===== */
+    document.getElementById('reset-form').addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const email = document.getElementById('reset-email-holder').value;
+        const otp = document.getElementById('reset-otp').value;
+        const newPassword = document.getElementById('reset-new-password').value;
+
+        const msg = document.getElementById('reset-message');
+
+        try {
+            const v = await fetch('/api/auth/verify-otp', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ email, otp })
+            });
+
+            if (!v.ok) {
+                msg.textContent = 'Invalid OTP';
+                msg.className = 'message error';
+                return;
+            }
+
+            const r = await fetch('/api/auth/reset-password', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ email, newPassword })
+            });
+
+            const t = await r.text();
+            msg.textContent = t;
+
+            if (r.ok) {
+                msg.className = 'message success';
+                setTimeout(() => window.location.href = 'login.html', 2000);
+            } else {
+                msg.className = 'message error';
+            }
+        } catch {
+            msg.textContent = 'Network error';
+            msg.className = 'message error';
+        }
+    });
+</script>
+
+<script>
+    /* === BACKGROUND ENERGY FIELD === */
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+
+    function resize(){
+        canvas.width = innerWidth;
+        canvas.height = innerHeight;
+    }
+    resize();
+    window.onresize = resize;
+
+    function createParticle(){
+        return {
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: Math.random()*3+1,
+            speed: Math.random()*1.2+0.4
+        }
+    }
+
+    const particles = Array.from({length:120},createParticle);
+
+    function animate(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        particles.forEach(p=>{
+            p.y -= p.speed;
+            if(p.y < 0) p.y = canvas.height;
+            ctx.beginPath();
+            ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+            ctx.fillStyle = 'rgba(0,209,255,0.6)';
+            ctx.fill();
+        });
+        requestAnimationFrame(animate);
+    }
+    animate();
+</script>
+
+</body>
+</html>

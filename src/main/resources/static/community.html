@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>EV Master Community</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #0da271;
+            --primary-light: #d1fae5;
+            --secondary: #6366f1;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --warning: #f59e0b;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 22px;
+            box-shadow: var(--shadow);
+        }
+
+        .brand h1 {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .brand p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-warning:hover {
+            background: #f59e0b;
+            color: white;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        /* CREATE POST */
+        .create-post {
+            margin-bottom: 30px;
+        }
+
+        .create-post textarea {
+            width: 100%;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            font-family: inherit;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            margin-bottom: 16px;
+            transition: border 0.2s;
+        }
+
+        .create-post textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .file-upload {
+            margin-bottom: 16px;
+        }
+
+        .file-upload label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .create-post-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* POSTS */
+        .posts-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .post-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .post-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow);
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .post-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .post-author h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .post-date {
+            color: var(--text-muted);
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .post-content {
+            margin-bottom: 16px;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+
+        .post-image {
+            max-width: 100%;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            display: block;
+            max-height: 400px;
+            object-fit: cover;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            background: var(--background);
+            color: var(--text);
+        }
+
+        .like-btn:hover {
+            color: #dc2626;
+        }
+
+        .comment-btn:hover {
+            color: var(--primary);
+        }
+
+        .share-btn:hover {
+            color: var(--secondary);
+        }
+
+        .post-admin-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        /* COMMENTS */
+        .comments-container {
+            margin-top: 16px;
+        }
+
+        .comment {
+            background: var(--background);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .comment:last-child {
+            margin-bottom: 0;
+        }
+
+        .comment-icon {
+            color: var(--primary);
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .comment-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .add-comment {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .comment-input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--border);
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* BADGE */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .post-admin-actions {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .add-comment {
+                flex-direction: column;
+            }
+
+            .comment-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo-container">
+            <div class="logo">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="brand">
+                <h1>EV Community</h1>
+                <p>Share EV tips, updates & experiences</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn btn-outline" onclick="goProfile()">
+                <i class="fas fa-user-circle"></i> My Profile
+            </button>
+            <button class="btn btn-primary" onclick="loadPosts()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- CREATE POST -->
+    <div class="card create-post">
+        <h2 style="margin-bottom: 16px;"><i class="fas fa-edit"></i> Create New Post</h2>
+        <textarea id="content" placeholder="What's on your mind? Share EV tips, charging experiences, or updates..."></textarea>
+
+        <div class="file-upload">
+            <label for="imageFile">
+                <i class="fas fa-image"></i> Add Image
+            </label>
+            <input type="file" id="imageFile" accept="image/*">
+            <span id="fileName" style="margin-left: 12px; color: var(--text-muted); font-size: 14px;"></span>
+        </div>
+
+        <div class="create-post-actions">
+            <button class="btn btn-outline" onclick="clearComposer()">
+                <i class="fas fa-times"></i> Clear
+            </button>
+            <button class="btn btn-primary" onclick="createPost()">
+                <i class="fas fa-paper-plane"></i> Post
+            </button>
+        </div>
+    </div>
+
+    <!-- POSTS LIST -->
+    <div class="posts-container" id="postsList">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading community posts...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ALL_POSTS = [];
+    let ME = null;
+
+    // ================= LOAD CURRENT USER =================
+    function loadMe() {
+        fetch("/api/user/me")
+            .then(r => r.json())
+            .then(u => {
+                ME = u;
+                loadPosts();
+            })
+            .catch(() => {
+                ME = null;
+                loadPosts();
+            });
+    }
+
+    // ================= LOAD ALL POSTS =================
+    function loadPosts() {
+        postsList.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Loading community posts...</p>
+            </div>
+        `;
+
+        fetch('/community/posts')
+            .then(r => r.json())
+            .then(data => {
+                ALL_POSTS = data;
+                renderPosts();
+            })
+            .catch(() => {
+                postsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Failed to load posts</h3>
+                        <p>Unable to retrieve posts. Please try again.</p>
+                        <button class="btn btn-primary" style="margin-top: 16px;" onclick="loadPosts()">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                `;
+            });
+    }
+
+    // ================= RENDER POSTS =================
+    function renderPosts() {
+        if (ALL_POSTS.length === 0) {
+            postsList.innerHTML = `
+                <div class="empty-state">
+                    <i class="far fa-newspaper"></i>
+                    <h3>No posts yet</h3>
+                    <p>Be the first to share something with the community!</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+
+        ALL_POSTS.forEach(p => {
+            const name = p.userName || "User";
+            const avatar = name.charAt(0).toUpperCase();
+            const isOwner = ME && p.userId === ME.id;
+            const isAdmin = ME && ME.userType === "SUPER_ADMIN";
+
+            html += `
+                <div class="post-card" id="post-${p.id}">
+                    <div class="post-header">
+                        <div class="post-avatar">${avatar}</div>
+                        <div class="post-author">
+                            <h3>${escapeHtml(name)} ${isOwner ? '<span class="badge">You</span>' : ''}</h3>
+                            <div class="post-date">
+                                <i class="far fa-calendar"></i>
+                                ${new Date(p.createdAt).toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="post-content">${escapeHtml(p.content)}</div>
+
+                    ${p.imagePath ? `<img class="post-image" src="${p.imagePath}" onerror="this.style.display='none'">` : ""}
+
+                    <div class="post-actions">
+                        <button class="action-btn like-btn" onclick="likePost(${p.id})">
+                            <i class="fas fa-heart"></i> ${p.likeCount || 0}
+                        </button>
+                        <button class="action-btn comment-btn" onclick="document.getElementById('c-${p.id}').focus()">
+                            <i class="fas fa-comment"></i> ${p.commentCount || 0}
+                        </button>
+                        <button class="action-btn share-btn" onclick="sharePost(${p.id})">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+
+                        ${(isOwner || isAdmin) ? `
+                            <div class="post-admin-actions">
+                                ${isAdmin ? `<button class="btn btn-warning" onclick="hidePost(${p.id})">
+                                    <i class="fas fa-eye-slash"></i> Hide
+                                </button>` : ''}
+                                ${(isOwner || isAdmin) ? `<button class="btn btn-danger" onclick="deletePost(${p.id})">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="comments-container" id="comments-${p.id}">
+                        <!-- Comments loaded here -->
+                    </div>
+
+                    <div class="add-comment">
+                        <input class="comment-input" id="c-${p.id}" placeholder="Write a comment...">
+                        <button class="btn btn-primary" onclick="addComment(${p.id})">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        postsList.innerHTML = html;
+
+        // Load comments for each post
+        ALL_POSTS.forEach(p => loadComments(p.id));
+
+        // Setup image file name display
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '';
+            document.getElementById('fileName').textContent = fileName;
+        });
+    }
+
+    // ================= COMMENTS =================
+    function loadComments(postId) {
+        fetch(`/community/post/${postId}/comments`)
+            .then(r => r.json())
+            .then(list => {
+                const box = document.getElementById("comments-" + postId);
+                if (!box) return;
+
+                if (list.length === 0) {
+                    box.innerHTML = '';
+                    return;
+                }
+
+                box.innerHTML = list.map(c => `
+                    <div class="comment">
+                        <div class="comment-icon">
+                            <i class="fas fa-comment-dots"></i>
+                        </div>
+                        <div class="comment-text">${escapeHtml(c.text)}</div>
+                    </div>
+                `).join('');
+            });
+    }
+
+    // ================= POST ACTIONS =================
+    function clearComposer() {
+        document.getElementById('content').value = '';
+        document.getElementById('imageFile').value = '';
+        document.getElementById('fileName').textContent = '';
+    }
+
+    function createPost() {
+        const text = document.getElementById('content').value.trim();
+        const file = document.getElementById('imageFile').files[0];
+
+        if (!text && !file) {
+            alert("Please write something or add an image");
+            return;
+        }
+
+        if (!file) {
+            fetch("/community/post", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "content=" + encodeURIComponent(text)
+            }).then(() => {
+                clearComposer();
+                loadPosts();
+            });
+        } else {
+            const fd = new FormData();
+            fd.append("content", text);
+            fd.append("image", file);
+            fetch("/community/post-with-image", { method: "POST", body: fd })
+                .then(() => {
+                    clearComposer();
+                    loadPosts();
+                });
+        }
+    }
+
+    function deletePost(id) {
+        if (!confirm("Are you sure you want to delete this post? This action cannot be undone.")) return;
+
+        fetch("/community/post/" + id, { method: "DELETE" })
+            .then(loadPosts)
+            .catch(() => alert("Failed to delete post"));
+    }
+
+    function hidePost(id) {
+        if (!confirm("Hide this post from the community?")) return;
+
+        fetch("/community/post/" + id + "/hide", { method: "POST" })
+            .then(loadPosts)
+            .catch(() => alert("Failed to hide post"));
+    }
+
+    function addComment(postId) {
+        const input = document.getElementById("c-" + postId);
+        const txt = input.value.trim();
+        if (!txt) return;
+
+        fetch(`/community/post/${postId}/comment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "text=" + encodeURIComponent(txt)
+        }).then(() => {
+            input.value = "";
+            loadPosts();
+        });
+    }
+
+    function likePost(id) {
+        fetch(`/community/post/${id}/like`, { method: "POST" })
+            .then(loadPosts)
+            .catch(() => alert("Failed to like post"));
+    }
+
+    // ================= NAVIGATION =================
+    function goProfile() {
+        window.location.href = "/profile.html";
+    }
+
+    function sharePost(id) {
+        const url = location.origin + "/community.html#post-" + id;
+        navigator.clipboard.writeText(url)
+            .then(() => {
+                alert("Post link copied to clipboard!");
+            })
+            .catch(() => {
+                prompt("Copy this link to share:", url);
+            });
+    }
+
+    // ================= UTILITIES =================
+    function escapeHtml(s) {
+        const div = document.createElement('div');
+        div.textContent = s || "";
+        return div.innerHTML;
+    }
+
+    // ================= INITIALIZATION =================
+    loadMe();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>My Profile - EV Community</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #0da271;
+            --primary-light: #d1fae5;
+            --secondary: #6366f1;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 36px;
+            flex-shrink: 0;
+            box-shadow: var(--shadow);
+        }
+
+        .profile-info h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .profile-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .posts-container {
+            display: grid;
+            gap: 18px;
+        }
+
+        .post-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .post-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .post-content {
+            margin-bottom: 16px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .post-image {
+            max-width: 100%;
+            border-radius: var(--radius-sm);
+            margin-top: 16px;
+            display: block;
+            max-height: 300px;
+            object-fit: cover;
+        }
+
+        .post-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .post-date {
+            color: var(--text-muted);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--border);
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+
+            .profile-meta {
+                align-items: center;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .post-footer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .post-actions {
+                width: 100%;
+            }
+
+            .btn {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-user-circle"></i> My Profile</h1>
+        <div class="header-actions">
+            <button class="btn btn-outline" onclick="location.href='/community.html'">
+                <i class="fas fa-arrow-left"></i> Back to Community
+            </button>
+            <button class="btn btn-primary" onclick="loadMyPosts()">
+                <i class="fas fa-sync-alt"></i> Refresh Posts
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="profile-header">
+            <div class="avatar" id="avatar">U</div>
+            <div class="profile-info">
+                <h1 id="fullName">Loading...</h1>
+                <div class="profile-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-envelope"></i>
+                        <span id="email"></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-user-tag"></i>
+                        <span id="role"></span>
+                        <span class="tag" id="roleTag"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fas fa-newspaper"></i>
+            <span>My Posts</span>
+        </div>
+
+        <div class="posts-container" id="myPosts">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Loading your posts...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ME = null;
+
+    // LOAD USER PROFILE
+    function loadMe(){
+        fetch("/api/user/me")
+            .then(r => {
+                if(!r.ok) throw "Not logged in";
+                return r.json();
+            })
+            .then(u => {
+                ME = u;
+                fullName.innerText = u.fullName;
+                email.innerText = u.email;
+                role.innerText = u.userType;
+                roleTag.innerText = u.userType;
+                avatar.innerText = u.fullName.charAt(0).toUpperCase();
+                loadMyPosts();
+            })
+            .catch(() => {
+                alert("You must be logged in to view your profile");
+                location.href = "/index.html";
+            });
+    }
+
+    // LOAD USER'S POSTS
+    function loadMyPosts(){
+        myPosts.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Loading your posts...</p>
+            </div>
+        `;
+
+        fetch("/community/posts")
+            .then(r => r.json())
+            .then(data => {
+                const mine = data.filter(p => p.userId === ME.id);
+
+                if(mine.length === 0){
+                    myPosts.innerHTML = `
+                        <div class="empty-state">
+                            <i class="far fa-newspaper"></i>
+                            <h3>No posts yet</h3>
+                            <p>You haven't created any posts. Share your thoughts with the community!</p>
+                            <button class="btn btn-primary" style="margin-top: 16px;" onclick="location.href='/community.html'">
+                                <i class="fas fa-plus"></i> Create Your First Post
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                myPosts.innerHTML = mine.map(p => `
+                    <div class="post-card">
+                        <div class="post-content">${escapeHtml(p.content)}</div>
+                        ${p.imagePath ? `<img src="${p.imagePath}" class="post-image" onerror="this.style.display='none'">` : ""}
+                        <div class="post-footer">
+                            <div class="post-date">
+                                <i class="far fa-calendar"></i>
+                                ${new Date(p.createdAt).toLocaleString()}
+                            </div>
+                            <div class="post-actions">
+                                <button class="btn btn-danger" onclick="deletePost(${p.id})">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                                <button class="btn btn-outline" onclick="sharePost(${p.id})">
+                                    <i class="fas fa-share"></i> Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join("");
+            })
+            .catch(() => {
+                myPosts.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Failed to load posts</h3>
+                        <p>Unable to retrieve your posts. Please try again.</p>
+                        <button class="btn btn-primary" style="margin-top: 16px;" onclick="loadMyPosts()">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                `;
+            });
+    }
+
+    // DELETE POST
+    function deletePost(id){
+        if(!confirm("Are you sure you want to delete this post? This action cannot be undone.")) return;
+
+        fetch("/community/post/" + id, { method: "DELETE" })
+            .then(() => {
+                loadMyPosts();
+            })
+            .catch(() => {
+                alert("Failed to delete post. Please try again.");
+            });
+    }
+
+    // SHARE POST
+    function sharePost(id){
+        const url = location.origin + "/community.html#post-" + id;
+        navigator.clipboard.writeText(url)
+            .then(() => {
+                alert("Post link copied to clipboard!");
+            })
+            .catch(() => {
+                // Fallback for browsers that don't support clipboard API
+                prompt("Copy this link to share:", url);
+            });
+    }
+
+    // ESCAPE HTML UTILITY
+    function escapeHtml(s){
+        const div = document.createElement('div');
+        div.textContent = s || "";
+        return div.innerHTML;
+    }
+
+    // INITIAL LOAD
+    loadMe();
+</script>
+
+</body>
+</html>

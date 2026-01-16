@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChargePoint - EV Login / Sign Up</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #060b13;
+            --cyan: #00d1ff;
+            --green: #39ff14;
+            --border: rgba(255,255,255,0.12);
+            --text-color: #fff;
+            --glass-bg: rgba(255,255,255,0.06);
+            --stat-bg: rgba(255,255,255,0.06);
+            --toggle-bg: rgba(255,255,255,0.1);
+
+            /* Light Mode Variables */
+            --light-bg: #f4f7f6;
+            --light-text: #333;
+            --light-border: rgba(0,0,0,0.12);
+            --light-glass: rgba(255,255,255,0.9);
+            --light-cyan: #4A90E2;
+            --light-green: #50E3C2;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text-color);
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.light-mode {
+            background: var(--light-bg);
+            color: var(--light-text);
+        }
+
+        canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        body.light-mode canvas {
+            opacity: 0.1;
+        }
+
+        .container-fluid {
+            position: relative;
+            z-index: 2;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--cyan);
+        }
+
+        body.light-mode .brand {
+            color: var(--light-cyan);
+        }
+
+        .brand .badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            color: #060b13;
+            font-size: 18px;
+            box-shadow: 0 0 14px rgba(0, 209, 255, 0.6), 0 0 28px rgba(57, 255, 20, 0.35);
+        }
+
+        body.light-mode .brand .badge {
+            background: linear-gradient(135deg, var(--light-cyan), var(--light-green));
+            box-shadow: 0 0 14px rgba(74, 144, 226, 0.4), 0 0 28px rgba(80, 227, 194, 0.2);
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 64px;
+            line-height: 1.05;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        body.light-mode .gradient-text {
+            background: linear-gradient(90deg, var(--light-cyan), var(--light-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .soft-glass {
+            background: var(--glass-bg);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            backdrop-filter: blur(10px);
+        }
+
+        body.light-mode .soft-glass {
+            background: var(--light-glass);
+            border: 1px solid var(--light-border);
+        }
+
+        .toggle {
+            background: var(--toggle-bg);
+            border-radius: 14px;
+            padding: 4px;
+            display: flex;
+        }
+
+        body.light-mode .toggle {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle button {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 8px 0;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        body.light-mode .toggle button {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        .toggle button.active {
+            background: #fff;
+            color: #000;
+        }
+
+        body.light-mode .toggle button.active {
+            background: #333;
+            color: #fff;
+        }
+
+        .form-control {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px;
+            border-radius: 14px;
+            transition: all 0.3s;
+        }
+
+        body.light-mode .form-control {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--light-border);
+            color: var(--light-text);
+        }
+
+        .form-control:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 2px rgba(0, 209, 255, 0.3);
+            outline: none;
+        }
+
+        body.light-mode .form-control:focus {
+            border-color: var(--light-cyan);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-energy {
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            border: none;
+            color: #000;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 14px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        body.light-mode .btn-energy {
+            background: linear-gradient(90deg, var(--light-cyan), var(--light-green));
+            color: #000;
+        }
+
+        .btn-energy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 209, 255, 0.4);
+        }
+
+        .charge-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        body.light-mode .charge-bar {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .charge-fill {
+            width: 75%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--green));
+            animation: pulse 1.5s infinite;
+        }
+
+        body.light-mode .charge-fill {
+            background: linear-gradient(90deg, var(--light-cyan), var(--light-green));
+        }
+
+        @keyframes pulse {
+            0% { opacity: .7 }
+            50% { opacity: 1 }
+            100% { opacity: .7 }
+        }
+
+        .stat {
+            background: var(--stat-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        body.light-mode .stat {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--light-border);
+        }
+
+        .stat h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyan);
+        }
+
+        body.light-mode .stat h3 {
+            color: var(--light-cyan);
+        }
+
+        .main-layout {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            padding: 20px;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .message.error {
+            background-color: rgba(248, 215, 218, 0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        .message.success {
+            background-color: rgba(212, 237, 218, 0.2);
+            color: #51cf66;
+            border: 1px solid rgba(81, 207, 102, 0.3);
+        }
+        .message.info {
+            background-color: rgba(204, 229, 255, 0.2);
+            color: #339af0;
+            border: 1px solid rgba(51, 154, 240, 0.3);
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--cyan);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 0 auto;
+        }
+
+        body.light-mode .loader {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid var(--light-cyan);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .toggle-link a {
+            color: var(--cyan);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        body.light-mode .toggle-link a {
+            color: var(--light-cyan);
+        }
+
+        .toggle-link a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 3;
+        }
+
+        .mode-toggle button {
+            background: var(--glass-bg);
+            border: 1px solid var(--border);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        body.light-mode .mode-toggle button {
+            background: var(--light-glass);
+            border: 1px solid var(--light-border);
+            color: var(--light-text);
+        }
+
+        @media (max-width: 992px) {
+            .hero {
+                display: none;
+            }
+            .main-layout {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .soft-glass {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="dark-mode">
+<canvas id="bg"></canvas>
+
+<div class="container-fluid">
+    <!-- Mode Toggle -->
+    <div class="mode-toggle">
+        <button id="mode-toggle-btn"><i class="fas fa-moon"></i> Night Mode</button>
+    </div>
+
+    <div class="main-layout">
+        <!-- HERO SECTION -->
+        <div class="hero d-none d-lg-flex flex-column justify-content-center">
+            <div class="brand mb-4">
+                <div class="badge">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                ChargePoint
+            </div>
+
+            <h1>Power Your<br><span class="gradient-text">Future</span></h1>
+            <p class="text-muted mt-3" style="max-width:520px;">Join the electric revolution. Fast charging, smart management.</p>
+
+            <div class="soft-glass mt-5 p-4" style="width:420px;">
+                <div class="text-success mb-2">● Charging Active</div>
+                <div class="charge-bar"><div class="charge-fill"></div></div>
+                <div class="d-flex justify-content-between text-muted mt-2 small">
+                    <span>75% Complete</span>
+                    <span>~15 min left</span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-4 mt-4">
+                <div class="stat"><h3>500+</h3><small>Stations</small></div>
+                <div class="stat"><h3>50k+</h3><small>Users</small></div>
+                <div class="stat"><h3>99.8%</h3><small>Uptime</small></div>
+            </div>
+        </div>
+
+        <!-- AUTH CARD -->
+        <div class="d-flex align-items-center">
+            <div class="soft-glass p-4" style="width:420px;">
+                <!-- Form Toggle -->
+                <div class="toggle mb-4">
+                    <button class="active" onclick="showForm('login')">Log In</button>
+                    <button onclick="showForm('signup')">Sign Up</button>
+                </div>
+
+                <!-- 1. LOGIN FORM -->
+                <form id="login-form" class="auth-form active" method="post" action="/api/auth/login">
+                    <h4 class="text-center mb-4">EV Master Login</h4>
+                    <div id="login-message" class="message"></div>
+
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <input type="email" id="login-email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" name="password" class="form-control" required>
+                    </div>
+
+                    <div class="d-flex justify-content-between small mb-3">
+                        <label><input type="checkbox"> Remember me</label>
+                        <a onclick="showForm('forgot')" class="text-info">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-energy w-100 mb-3">Log In →</button>
+
+                    <div class="text-center text-muted small my-3">or continue with</div>
+
+                    <div class="row g-2">
+                        <div class="col"><button type="button" class="btn btn-outline-light w-100">Google</button></div>
+                        <div class="col"><button type="button" class="btn btn-outline-light w-100">Apple</button></div>
+                    </div>
+
+                    <div class="toggle-link">
+                        <a onclick="showForm('signup')">Need an account? Sign Up</a>
+                    </div>
+                </form>
+
+                <!-- 2. SIGN UP FORM -->
+                <form id="signup-form" class="auth-form">
+                    <h4 class="text-center mb-4">EV Master Sign Up</h4>
+                    <div id="signup-message" class="message"></div>
+
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-nic">National ID (NIC)</label>
+                        <input type="text" id="signup-nic" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-fullname">Full Name</label>
+                        <input type="text" id="signup-fullname" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-phone">Phone Number</label>
+                        <input type="tel" id="signup-phone" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-user-type">User Type</label>
+                        <select id="signup-user-type" class="form-control" required>
+                            <option value="EV_OWNER">EV Owner</option>
+                            <option value="STATION_MANAGER">Station Manager</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-energy w-100 mb-3">Sign Up →</button>
+
+                    <div class="toggle-link">
+                        <a onclick="showForm('login')">Already have an account? Log In</a>
+                    </div>
+                </form>
+
+                <!-- 3. FORGOT PASSWORD -->
+                <form id="forgot-form" class="auth-form">
+                    <h4 class="text-center mb-4">Forgot Password</h4>
+                    <p class="text-center text-muted small mb-3">Enter your email to receive a password reset OTP.</p>
+                    <div id="forgot-message" class="message"></div>
+
+                    <div class="form-group">
+                        <label for="forgot-email">Email</label>
+                        <input type="email" id="forgot-email" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-energy w-100 mb-2" id="forgot-btn">Send OTP</button>
+                    <div class="loader" id="forgot-loader"></div>
+
+                    <div class="toggle-link">
+                        <a onclick="showForm('login')">Back to Login</a>
+                    </div>
+                </form>
+
+                <!-- 4. RESET PASSWORD -->
+                <form id="reset-form" class="auth-form">
+                    <h4 class="text-center mb-4">Reset Password</h4>
+                    <div id="reset-message" class="message"></div>
+
+                    <div class="form-group">
+                        <label for="reset-otp">OTP Code</label>
+                        <input type="text" id="reset-otp" class="form-control" placeholder="Enter 6-digit OTP" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reset-new-password">New Password</label>
+                        <input type="password" id="reset-new-password" class="form-control" required>
+                    </div>
+
+                    <input type="hidden" id="reset-email-holder">
+
+                    <button type="submit" class="btn btn-energy w-100 mb-2" id="reset-btn">Reset Password</button>
+                    <div class="loader" id="reset-loader"></div>
+
+                    <div class="toggle-link">
+                        <a onclick="showForm('login')">Back to Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Day/Night Mode Logic ---
+    document.getElementById('mode-toggle-btn').addEventListener('click', function() {
+        const body = document.body;
+        body.classList.toggle('light-mode');
+        const isDarkMode = !body.classList.contains('light-mode');
+
+        // Save state to local storage
+        localStorage.setItem('mode', isDarkMode ? 'dark' : 'light');
+
+        // Update button text and icon
+        this.innerHTML = isDarkMode ?
+            '<i class="fas fa-moon"></i> Night Mode' :
+            '<i class="fas fa-sun"></i> Day Mode';
+    });
+
+    // Load mode preference on startup
+    (function loadMode() {
+        const savedMode = localStorage.getItem('mode');
+        const body = document.body;
+        const button = document.getElementById('mode-toggle-btn');
+
+        if (savedMode === 'light') {
+            body.classList.add('light-mode');
+            button.innerHTML = '<i class="fas fa-sun"></i> Day Mode';
+        } else {
+            body.classList.remove('light-mode');
+            button.innerHTML = '<i class="fas fa-moon"></i> Night Mode';
+        }
+    })();
+
+    // --- UI/Form Switching Logic ---
+    let currentEmailForReset = '';
+
+    function showForm(formId) {
+        // Update toggle buttons
+        document.querySelectorAll('.toggle button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        if (formId === 'login') {
+            document.querySelector('.toggle button:first-child').classList.add('active');
+        } else if (formId === 'signup') {
+            document.querySelector('.toggle button:last-child').classList.add('active');
+        }
+
+        // Show selected form
+        document.querySelectorAll('.auth-form').forEach(form => {
+            form.classList.remove('active');
+        });
+        document.getElementById(formId + '-form').classList.add('active');
+
+        // Clear messages
+        document.querySelectorAll('.message').forEach(el => {
+            el.style.display = 'none';
+            el.textContent = '';
+        });
+
+        // Hide loaders
+        document.querySelectorAll('.loader').forEach(el => {
+            el.style.display = 'none';
+        });
+    }
+
+    function showMessage(formId, text, type) {
+        const messageEl = document.getElementById(formId + '-message');
+        messageEl.textContent = text;
+        messageEl.className = 'message ' + type;
+        messageEl.style.display = 'block';
+    }
+
+    // --- Authentication JavaScript Logic ---
+
+    // 1. Handle URL parameters for login errors/logout
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('error')) {
+            showMessage('login', 'Login failed: Invalid email or password.', 'error');
+            showForm('login');
+        } else if (urlParams.has('logout')) {
+            showMessage('login', 'You have been logged out successfully.', 'info');
+            showForm('login');
+        }
+    });
+
+    // 2. SIGNUP
+    document.getElementById('signup-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const payload = {
+            email: document.getElementById('signup-email').value,
+            password: document.getElementById('signup-password').value,
+            nic: document.getElementById('signup-nic').value,
+            fullName: document.getElementById('signup-fullname').value,
+            phoneNumber: document.getElementById('signup-phone').value,
+            userType: document.getElementById('signup-user-type').value,
+        };
+
+        try {
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const responseText = await response.text();
+
+            if (response.ok) {
+                showMessage('signup', responseText, 'success');
+                // Automatically switch to login form after a short delay
+                setTimeout(() => showForm('login'), 2000);
+            } else {
+                showMessage('signup', 'Signup failed: ' + responseText, 'error');
+            }
+        } catch (error) {
+            showMessage('signup', 'Network error during signup.', 'error');
+        }
+    });
+
+    // 3. FORGOT PASSWORD (Request OTP)
+    document.getElementById('forgot-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('forgot-email').value;
+        const loader = document.getElementById('forgot-loader');
+        const button = document.getElementById('forgot-btn');
+
+        loader.style.display = 'block';
+        button.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+
+            const responseText = await response.text();
+
+            if (response.ok) {
+                showMessage('forgot', responseText + ' Proceed to OTP verification.', 'success');
+                currentEmailForReset = email; // Store email for the next step
+                document.getElementById('reset-email-holder').value = email;
+                setTimeout(() => showForm('reset'), 3000); // Auto-switch to reset form
+            } else {
+                showMessage('forgot', responseText, 'error');
+            }
+        } catch (error) {
+            showMessage('forgot', 'Network error during OTP request.', 'error');
+        } finally {
+            loader.style.display = 'none';
+            button.style.display = 'block';
+        }
+    });
+
+    // 4. RESET PASSWORD (Verify OTP and Set New Password)
+    document.getElementById('reset-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('reset-email-holder').value;
+        const otp = document.getElementById('reset-otp').value;
+        const newPassword = document.getElementById('reset-new-password').value;
+
+        const loader = document.getElementById('reset-loader');
+        const button = document.getElementById('reset-btn');
+
+        loader.style.display = 'block';
+        button.style.display = 'none';
+
+        // Step 1: Verify OTP
+        try {
+            const verifyResponse = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, otp: otp })
+            });
+
+            const verifyText = await verifyResponse.text();
+
+            if (!verifyResponse.ok) {
+                showMessage('reset', verifyText, 'error');
+                return; // Stop if verification fails
+            }
+
+            // Step 2: If OTP verified, proceed to Reset Password
+            const resetResponse = await fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, newPassword: newPassword })
+            });
+
+            const resetText = await resetResponse.text();
+
+            if (resetResponse.ok) {
+                showMessage('reset', resetText, 'success');
+                // Reset success, go back to login
+                setTimeout(() => showForm('login'), 3000);
+            } else {
+                showMessage('reset', 'Password reset failed: ' + resetText, 'error');
+            }
+
+        } catch (error) {
+            showMessage('reset', 'Network error during password reset.', 'error');
+        } finally {
+            loader.style.display = 'none';
+            button.style.display = 'block';
+        }
+    });
+
+    // --- Background Animation ---
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resize();
+    window.onresize = resize;
+
+    function createParticle(layer) {
+        const isLight = document.body.classList.contains('light-mode');
+        const colors = isLight ?
+            ['74,144,226', '80,227,194'] : // Light mode colors
+            ['0,209,255', '57,255,20'];    // Dark mode colors
+
+        return {
+            layer,
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            r: layer === "inner" ? Math.random() * 2 + 1 : Math.random() * 9 + 6,
+            baseX: Math.random() * 1000,
+            speed: Math.random() * (layer === "inner" ? 1.6 : 0.8) + 0.4,
+            offset: Math.random() * Math.PI * 2,
+            c: Math.random() > 0.5 ? colors[0] : colors[1],
+            alpha: layer === "inner" ? 0.85 : 0.08
+        }
+    }
+
+    let inner = Array.from({ length: 80 }, () => createParticle("inner"));
+    let outer = Array.from({ length: 45 }, () => createParticle("outer"));
+
+    function draw(p) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.c},${p.alpha})`;
+        ctx.shadowBlur = p.layer === "outer" ? 24 : 8;
+        ctx.shadowColor = `rgba(${p.c},0.5)`;
+        ctx.fill();
+    }
+
+    function update(list) {
+        list.forEach(p => {
+            p.y -= p.speed;
+            p.x += Math.sin((p.baseX + p.y) * 0.01 + p.offset) * 0.8;
+
+            if (p.y < -100) {
+                p.y = canvas.height + Math.random() * 200;
+                p.x = Math.random() * canvas.width;
+            }
+
+            draw(p);
+        });
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        update(outer);
+        update(inner);
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Update particles when mode changes
+    document.getElementById('mode-toggle-btn').addEventListener('click', () => {
+        setTimeout(() => {
+            inner = Array.from({ length: 80 }, () => createParticle("inner"));
+            outer = Array.from({ length: 45 }, () => createParticle("outer"));
+        }, 300);
+    });
+</script>
+</body>
+</html>

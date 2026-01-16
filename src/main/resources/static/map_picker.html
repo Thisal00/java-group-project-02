@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>EV Master - Select Station Location</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Search (Nominatim) -->
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+    <style>
+        body { margin: 0; font-family: 'Inter', sans-serif; }
+        #map { height: 80vh; width: 100%; }
+        .box {
+            padding: 15px;
+            background: #fafafa;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        input {
+            padding: 8px;
+            width: 150px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #addr { width: 300px; }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        #setLocBtn {
+            background-color: #50E3C2;
+            color: #333;
+        }
+        #setLocBtn:hover {
+            background-color: #40c0a8;
+        }
+        #locBtn {
+            background-color: #4A90E2;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+<div class="box">
+    <div style="display: flex; align-items: center;">
+        <input id="lat" placeholder="Latitude" readonly>
+        <input id="lng" placeholder="Longitude" readonly>
+        <input id="addr" placeholder="Address" readonly>
+    </div>
+    <div>
+        <button id="locBtn">My Location</button>
+        <button id="setLocBtn">Set Location & Close</button>
+    </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+    // Default Sri Lanka center coordinates
+    const DEFAULT_LAT = 7.8731;
+    const DEFAULT_LNG = 80.7718;
+
+    // Map setup
+    var map = L.map('map').setView([DEFAULT_LAT, DEFAULT_LNG], 7);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19
+    }).addTo(map);
+
+    let marker;
+
+    // --- Functions ---
+
+    function updateFields(lat, lng, addr="") {
+        document.getElementById("lat").value = lat.toFixed(6);
+        document.getElementById("lng").value = lng.toFixed(6);
+        document.getElementById("addr").value = addr;
+    }
+
+    async function getAddress(lat, lng) {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+        try {
+            // IMPORTANT: Nominatim requires a user agent header
+            const res = await fetch(url, { headers: { "User-Agent": "EV-Master-App" }});
+            const data = await res.json();
+            return data.display_name || "Address not found";
+        } catch (e) {
+            console.error("Geocoding failed:", e);
+            return "Address lookup failed";
+        }
+    }
+
+    async function placeMarker(lat, lng, zoom=null) {
+        if (marker) map.removeLayer(marker);
+
+        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        if (zoom) map.setView([lat, lng], zoom);
+
+        const addr = await getAddress(lat, lng);
+        updateFields(lat, lng, addr);
+
+        marker.on("dragend", async function () {
+            var p = marker.getLatLng();
+            const addr2 = await getAddress(p.lat, p.lng);
+            updateFields(p.lat, p.lng, addr2);
+        });
+    }
+
+    // --- Event Listeners ---
+
+    // 1. Initial Load: Set marker at default or initial coordinates
+    placeMarker(DEFAULT_LAT, DEFAULT_LNG);
+
+    // 2. Click on map
+    map.on("click", function (e) {
+        placeMarker(e.latlng.lat, e.latlng.lng);
+    });
+
+    // 3. Search bar (Nominatim)
+    L.Control.geocoder({
+        defaultMarkGeocode: false
+    })
+        .on("markgeocode", function (e) {
+            var center = e.geocode.center;
+            map.setView(center, 15);
+            placeMarker(center.lat, center.lng);
+        })
+        .addTo(map);
+
+    // 4. My location button
+    document.getElementById("locBtn").onclick = function () {
+        if (!navigator.geolocation) {
+            alert("Geolocation not supported by your browser.");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            let lat = pos.coords.latitude;
+            let lng = pos.coords.longitude;
+            placeMarker(lat, lng, 15);
+        }, function(err) {
+            alert("Geolocation failed: " + err.message);
+        });
+    };
+
+    // 5. Set Location button (CRITICAL: Sends data back to opener window)
+    document.getElementById("setLocBtn").onclick = function () {
+        const lat = document.getElementById("lat").value;
+        const lng = document.getElementById("lng").value;
+        const addr = document.getElementById("addr").value;
+
+        if (window.opener) {
+            window.opener.postMessage({
+                source: 'evMasterMapPicker',
+                latitude: lat,
+                longitude: lng,
+                address: addr
+            }, window.opener.location.origin); // Ensure secure cross-origin communication
+        }
+        window.close(); // Close the picker window
+    };
+
+</script>
+</body>
+</html>
