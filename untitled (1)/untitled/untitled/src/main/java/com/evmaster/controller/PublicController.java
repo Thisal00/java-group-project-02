@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//ontroller providing public
 
 @RestController
 @RequestMapping("/api/public")
@@ -21,7 +22,8 @@ public class PublicController {
 
     @Autowired
     private StationService stationService;
-
+    
+//Return stations
   
     @GetMapping("/stations")
     @Transactional(readOnly = true)
@@ -86,3 +88,4 @@ public class PublicController {
         return dto;
     }
 }
+
