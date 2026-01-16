@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>EV Master Community</title>
+
+    <style>
+        :root{--accent:#0db37f;--danger:#e23b3b;--muted:#6b7280;}
+        *{box-sizing:border-box}
+        body{margin:0;font-family:Segoe UI,Arial;background:#f3f7f8;}
+        .wrap{max-width:1100px;margin:20px auto;padding:14px}
+        .card{background:#fff;border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.06);margin-bottom:12px}
+        header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+        .logo{width:42px;height:42px;border-radius:10px;background:#0db37f;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+        textarea,input{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd}
+        .btn{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+        .btn-primary{background:#0db37f;color:#fff}
+        .btn-danger{background:#e23b3b;color:#fff}
+        .btn-ghost{background:#fff;border:1px solid #ddd}
+        .avatar{width:40px;height:40px;border-radius:8px;background:#eafaf4;color:#0db37f;display:flex;align-items:center;justify-content:center;font-weight:700}
+        .post-img{max-width:100%;border-radius:8px;margin-top:8px}
+        .muted{color:#6b7280;font-size:13px}
+        .like-btn{border:0;background:#f1f5f4;padding:6px 12px;border-radius:20px;cursor:pointer}
+        .comment{background:#f7f9f8;padding:8px;border-radius:8px;margin-top:6px;font-size:14px}
+        .top-actions{display:flex;gap:10px}
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+
+    <header>
+        <div style="display:flex;gap:10px;align-items:center">
+            <div class="logo">EV</div>
+            <div>
+                <b>EV Community</b>
+                <div class="muted">Share EV tips & updates</div>
+            </div>
+        </div>
+
+        <div class="top-actions">
+            <button class="btn btn-ghost" onclick="goProfile()">My Profile</button>
+            <button class="btn btn-ghost" onclick="loadPosts()">Refresh</button>
+        </div>
+    </header>
+
+    <!-- CREATE POST -->
+    <div class="card">
+        <textarea id="content" placeholder="Write something..."></textarea>
+        <input type="file" id="imageFile" accept="image/*" style="margin-top:8px">
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-ghost" onclick="clearComposer()">Clear</button>
+            <button class="btn btn-primary" onclick="createPost()">Post</button>
+        </div>
+    </div>
+
+    <!-- POSTS -->
+    <div id="postsList"></div>
+
+</div>
+
+<script>
+    let ALL_POSTS = [];
+
+    // LOAD POSTS 
+    function loadPosts(){
+        fetch('/community/posts')
+            .then(r=>r.json())
+            .then(data=>{
+                ALL_POSTS = data;
+                renderPosts();
+            });
+    }
+
+    // RENDER 
+    function renderPosts(){
+        let html = "";
+
+        ALL_POSTS.forEach(p=>{
+            const name = p.userName || "User";
+            const avatar = name.charAt(0).toUpperCase();
+
+            html += `
+<div class="card">
+  <div style="display:flex;gap:10px">
+    <div class="avatar">${avatar}</div>
+    <div>
+      <b>${escapeHtml(name)}</b>
+      <div class="muted">${new Date(p.createdAt).toLocaleString()}</div>
+    </div>
+  </div>
+
+  <div style="margin-top:10px">${escapeHtml(p.content)}</div>
+
+  ${p.imagePath ? `<img class="post-img" src="${p.imagePath}" onerror="this.style.display='none'">` : ""}
+
+  <div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap">
+    <button class="like-btn" onclick="likePost(${p.id})">❤️ ${p.likeCount || 0}</button>
+    <span class="muted">💬 ${p.commentCount || 0} comments</span>
+    <button class="btn btn-ghost" onclick="sharePost(${p.id})">Share</button>
+
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn btn-ghost" onclick="hidePost(${p.id})">Hide</button>
+      <button class="btn btn-danger" onclick="deletePost(${p.id})">Delete</button>
+    </div>
+  </div>
+
+  <div id="comments-${p.id}"></div>
+
+  <div style="margin-top:10px;display:flex;gap:6px">
+    <input id="c-${p.id}" placeholder="Write comment...">
+    <button class="btn btn-primary" onclick="addComment(${p.id})">Send</button>
+  </div>
+</div>
+`;
+            loadComments(p.id);
+        });
+
+        postsList.innerHTML = html || "<div class='card'>No posts</div>";
+    }
+
+    // COMMENTS 
+    function loadComments(postId){
+        fetch(`/community/post/${postId}/comments`)
+            .then(r=>r.json())
+            .then(list=>{
+                const box = document.getElementById("comments-"+postId);
+                if(!box) return;
+
+                box.innerHTML = list.map(c=>`
+        <div class="comment">💬 ${escapeHtml(c.text)}</div>
+      `).join("");
+            });
+    }
+
+    // ACTIONS 
+    function clearComposer(){ content.value=""; imageFile.value=""; }
+
+    function createPost(){
+        const text = content.value.trim();
+        const file = imageFile.files[0];
+        if(!text) return alert("Write something");
+
+        if(!file){
+            fetch("/community/post",{
+                method:"POST",
+                headers:{"Content-Type":"application/x-www-form-urlencoded"},
+                body:"content="+encodeURIComponent(text)
+            }).then(()=>{clearComposer();loadPosts();});
+        } else {
+            const fd = new FormData();
+            fd.append("content",text);
+            fd.append("image",file);
+            fetch("/community/post-with-image",{method:"POST",body:fd})
+                .then(()=>{clearComposer();loadPosts();});
+        }
+    }
+
+    function deletePost(id){
+        if(!confirm("Delete post?")) return;
+        fetch("/community/post/"+id,{method:"DELETE"}).then(loadPosts);
+    }
+
+    function hidePost(id){
+        if(!confirm("Hide this post?")) return;
+        fetch("/community/post/"+id+"/hide",{method:"POST"}).then(loadPosts);
+    }
+
+    function addComment(postId){
+        const input = document.getElementById("c-"+postId);
+        const txt = input.value.trim();
+        if(!txt) return;
+
+        fetch(`/community/post/${postId}/comment`,{
+            method:"POST",
+            headers:{"Content-Type":"application/x-www-form-urlencoded"},
+            body:"text="+encodeURIComponent(txt)
+        }).then(()=>{input.value="";loadPosts();});
+    }
+
+    function likePost(id){
+        fetch(`/community/post/${id}/like`,{method:"POST"}).then(loadPosts);
+    }
+
+    //  EXTRA 
+    function goProfile(){
+        window.location.href = "/profile.html";
+    }
+
+    function sharePost(id){
+        const url = location.origin + "/community.html#post-" + id;
+        navigator.clipboard.writeText(url);
+        alert("Post link copied!");
+    }
+
+    //  UTILS 
+    function escapeHtml(s){
+        return String(s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    }
+
+    // INIT
+    loadPosts();
+</script>
+
+</body>
+</html>
